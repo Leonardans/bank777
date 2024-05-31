@@ -27,4 +27,16 @@ public class Admin {
         return "Admin [userID=" + userID + "]";
     }
 
+        /*
+         *
+         * If user is admin, admin can:
+         * 1. see total bank money
+         * 2. see all users and their accounts
+         * 3. find accountID
+         * 4. close another account
+         * 5. take money from account to account
+         * 6. see his own account info
+         */
+
+
 }

@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class User {
-    private int userID;
+    private final int userID;
     private String name;
     private String address;
     private String password;
@@ -24,15 +24,7 @@ public class User {
     public String getName() {
         return name;
     }
-    public void changeName(String name) {
-        this.name = name;
-    }
-    public String getAddress() {
-        return address;
-    }
-    public void changeAddress(String address) {
-        this.address = address;
-    }
+
     public String getPassword() {
         return password;
     }
@@ -43,7 +35,10 @@ public class User {
         return userAccounts;
     }
 
-   
+    public void plusOne(BankAccount account) {
+        userAccounts.add(account);
+    }
+
     @Override
     public String toString() {
         return "User [userID=" + userID + ", name=" + name + ", address=" + address + ", userAccounts=" + userAccounts
