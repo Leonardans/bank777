@@ -112,13 +112,13 @@ public class Bank {
     }
     public String generateAccountNumber() {
         Random random = new Random();
-        String accNum = "E" + random.nextLong(8_999_999_999_999L) + 1_000_000_000_000L;
+        String accNum = "E" + (random.nextLong(8_999_999_999_999L) + 1_000_000_000_000L);
 
         while(true) {
             boolean check = true;
             for (BankAccount account : accounts) {
                 if (accNum.equals(account.getAccountNumber())) {
-                    accNum = "E" + random.nextLong(8_999_999_999_999L) + 1_000_000_000_000L;
+                    accNum = "E" + (random.nextLong(8_999_999_999_999L) + 1_000_000_000_000L);
                     check = false;
                 }
             }
@@ -181,6 +181,9 @@ public class Bank {
     }
     
     public boolean openNewAccount(User user) {
+        if(user.getUserAccounts().size() >= 3) {
+            return false;
+        }
         int accID = generateAccountID();
         String accNum = generateAccountNumber();
         BankAccount newAccount = new BankAccount(accID, accNum, 0D, user.getUserID(), this);

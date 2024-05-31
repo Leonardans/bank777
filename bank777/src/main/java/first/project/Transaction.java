@@ -60,6 +60,6 @@ public class Transaction {
     @Override
     public String toString() {
         return "Transaction [" + transactionID + ", transactionType = " + transactionType + ", accountID = " + accountID
-        + ", amount = " + amount + " $ " + date + "]";
+        + ", amount = " + amount + "$ " + date + "]";
     }
 }

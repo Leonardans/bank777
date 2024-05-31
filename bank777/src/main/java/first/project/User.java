@@ -34,9 +34,18 @@ public class User {
     public List<BankAccount> getUserAccounts() {
         return userAccounts;
     }
-
-    public void plusOne(BankAccount account) {
-        userAccounts.add(account);
+    public void showAccounts() {
+        for(BankAccount account : userAccounts) {
+            System.out.println(account);
+        }
+    }
+    public boolean plusOne(BankAccount account) {
+        if(userAccounts.size() >= 3) {
+            return false;
+        } else {
+            userAccounts.add(account);
+            return true;
+        }
     }
 
     @Override

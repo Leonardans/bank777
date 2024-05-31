@@ -1,5 +1,6 @@
 package first.project;
 
+import java.sql.SQLException;
 import java.util.Scanner;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -8,7 +9,7 @@ public final class CLI_App {
     Bank bank = Bank.getInstance();
 
     public void openBank() {
-        System.out.println("Welcome. We're pleased to greet you. We offer the best services in town." +
+        System.out.println("\nWelcome. We're pleased to greet you. We offer the best services in town." +
         "To get started, please enter your information or create your unique profile.");
 
         Scanner scanner = new Scanner(System.in);
@@ -48,30 +49,14 @@ public final class CLI_App {
         } 
     }
     public void proccessLogin(Scanner scanner) {
-        int id = 0;
-        String password = "";
-        for(int i = 0; i < 5; i++) {
-            System.out.println("Please, enter your userID: ");
-            String providedID = scanner.nextLine();
-            if(!checkUserID(providedID)) {
-                System.out.println("UserID most contain 8 numbers!\n");
-                continue;
-            }
+        int id = Integer.parseInt(enterUserID(scanner));
+        String password = enterPassword(scanner);
 
-            System.out.println("Please, enter your password: ");
-            String providedPassword = scanner.nextLine();
-            if(!checkPassword(providedPassword)) {
-                System.out.println("The password must contain at least 8 characters, including at least " +
-                "one digit, one lowercase letter, one uppercase letter, and one special character from the set @#$%^&+=.\n");
-                continue;
-            }
-
-            if(checkUserID(providedID) && checkPassword(providedPassword)) {
-                id = Integer.parseInt(providedID);
-                password = providedPassword;
-                break;
-            }
+        if(id == 0) {
+            System.out.println("Please, check userID or password.\n");
+            proccessChoise1(scanner);
         }
+
         if(bank.login(id, password)) {
             System.out.println("You login successfully!");
             openProfile(bank.systemFindUser(id), scanner);
@@ -81,49 +66,18 @@ public final class CLI_App {
         }
     }
     public void proccessCreateNewProfile(Scanner scanner) {
-        System.out.println("It's your best choise for today!");
-        String name = "";
-        String address = "";
-        String password = "";
-        
-        for(int i = 0; i < 5; i++) {
-            System.out.println("Please, enter your name: ");
-            String providedName = scanner.nextLine();
-            if(!checkName(providedName)) {
-                System.out.println("Incorrect name!");
-                continue;
-            }
-
-            System.out.println("Please, enter your password: ");
-            String providedPassword = scanner.nextLine();
-            if(!checkPassword(providedPassword)) {
-                System.out.println("The password must contain at least 8 characters, including at least " +
-                "one digit, one lowercase letter, one uppercase letter, and one special character from the set @#$%^&+=.");
-                continue;
-            }
-
-            System.out.println("Please, enter your address: ");
-            String providedAddress = scanner.nextLine();
-            if(!checkAddress(providedAddress)) {
-                System.out.println("Incorrect address!");
-                continue;
-            }
-
-            if(checkName(providedName) && checkPassword(providedPassword) && checkAddress(providedAddress)) {
-                name = providedName;
-                password = providedPassword;
-                address = providedAddress;
-                break;
-            }
-            if(i == 4) {
-                proccessChoise1(scanner);
-            }
+        System.out.println("\nIt's your best choise for today!\n");
+        String name = enterName(scanner);
+        String password = enterPassword(scanner);
+        String address = enterAddress(scanner);
+        if(name.equals("")) {
+            proccessChoise1(scanner);
         }
-
         int userID = bank.createNewProfile(name, address, password);
 
-        System.out.println("New profile was created! Thank you for choosing our bank. We assure you that you will be satisfied with our services!");
-        System.out.println("Your userID is " + userID + " please, remember it!");
+        System.out.println("\nNew profile was created! Thank you for choosing our bank. We assure you that you will be satisfied with our services!");
+        System.out.println("Your userID is " + userID + " please, remember it!\n");
+        openBank();
     }
 
     public void proccessChoise2(User activeUser, Scanner scanner) {
@@ -140,16 +94,18 @@ public final class CLI_App {
         }
     }
     public void proccessOpenNewAccount(User activeUser, Scanner scanner) {
-        System.out.println("We are generating your ID and account number...");
         if(bank.openNewAccount(activeUser)) {
             System.out.println("\nCongratulations! The account has been successfully opened.\n");
+            openProfile(activeUser, scanner);
+        } else {
+            System.out.println("You have too mach open accounts.\n");
             openProfile(activeUser, scanner);
         }
     }
 
     public void proccessChoise3(User activeUser, Scanner scanner) {
-        System.out.println("Active accounts: ");
-        System.out.println(activeUser.getUserAccounts());
+        System.out.println("\nActive accounts: ");
+        activeUser.showAccounts();
         System.out.println("\n1. Withdrawal");
         System.out.println("2. Deposit");
         System.out.println("3. Transactions history");
@@ -173,99 +129,175 @@ public final class CLI_App {
                 proccessChoise3(activeUser, scanner);
         }
     }
+    
     public void proccessWithdrawal(User activeUser, Scanner scanner) {
-        BankAccount fromAccount = activeUser.getUserAccounts().size() > 1 ? 
-        proccessChooseAccount(activeUser, scanner) : activeUser.getUserAccounts().get(0);
-        BankAccount toAccount = null;
+        try {
+            BankAccount fromAccount = activeUser.getUserAccounts().size() > 1 ? 
+            proccessChooseAccount(activeUser, scanner) : activeUser.getUserAccounts().get(0);
+            BankAccount toAccount = bank.getAccountForTransfer(enterAccountNumber(fromAccount, scanner));
 
-        for(int i = 5; i > 0; i--) {
-            System.out.println("Please enter the account number to which you wish to transfer money.");
-            String providedAccountNumber = scanner.nextLine();
-            if(!fromAccount.correctAccount(providedAccountNumber)) {
-                System.out.println("Please, enter the correct account number.");
-                continue;
+            if(toAccount == null) {
+                System.out.println("Transfer not executed.\n");
+                openProfile(activeUser, scanner);
             }
-            if(!bank.accountPresent(providedAccountNumber)) {
-                System.out.println("Please, check account number.");
-                continue;
+    
+            double amount = Double.parseDouble(enterAmount(toAccount, scanner));
+            if(amount == 0D) {
+                System.out.println("Transfer not executed.\n");
+                openProfile(activeUser, scanner);
             }
-            toAccount = bank.getAccountForTransfer(providedAccountNumber);
-            break;
-        }
-        if(toAccount == null) {
-            System.out.println("Transfer not executed.\n");
-            return;
-        }
- 
-        double amount = 0D;
-        for(int i = 5; i > 0; i--) {
-            System.out.println("Please enter the amount you wish to transfer.");
-            String provided = scanner.nextLine();
- 
-            if(fromAccount.correctSum(provided)) {
-                amount = Double.parseDouble(provided);
-                break;
+            
+            if(fromAccount.withdrawal(toAccount, amount)) {
+                System.out.println("Transfer was successfully executed.\n");
             } else {
-                System.out.println("Please, provide correct amount for transfer.\n");
+                System.out.println("Transfer not executed.\n");
             }
-        }
-        if(amount == 0D) {
-            System.out.println("Transfer not executed.");
-            return;
-        }
-        
-        if(fromAccount.withdrawal(toAccount, amount)) {
-            System.out.println("Transfer was successfully executed.\n");
-            openProfile(activeUser, scanner);
-        } else {
-            System.out.println("Transfer not executed.\n");
-            openProfile(activeUser, scanner);
-        }
-    }
-    public void proccessDeposit(User activeUser, Scanner scanner) {
-        BankAccount account = activeUser.getUserAccounts().size() > 1 ? 
-        proccessChooseAccount(activeUser, scanner) : activeUser.getUserAccounts().get(0);
 
-        System.out.println("Please enter the amount you wish to deposit.");
-        String amount = scanner.nextLine();
-        if(account.correctSum(amount)) {
-            account.deposit(Double.parseDouble(amount));
             openProfile(activeUser, scanner);
-        } else {
-            System.out.println("Please, enter correct amount for deposit.\n");
-            proccessChoise3(activeUser, scanner);
+        } catch (SQLException e) {
+            System.out.println("An error occurred during the withdrawal: " + e.getMessage());
+            e.printStackTrace();
         }
     }
+
+    public void proccessDeposit(User activeUser, Scanner scanner) {
+        try {
+            BankAccount account = activeUser.getUserAccounts().size() > 1 ? 
+            proccessChooseAccount(activeUser, scanner) : activeUser.getUserAccounts().get(0);
+
+            String amount = enterAmount(account, scanner);
+
+            if(amount.equals("")) {
+                proccessChoise3(activeUser, scanner);
+            }
+
+            account.deposit(Double.parseDouble(amount));
+            System.out.println(amount + " was successfully added to your account.\n");
+            openProfile(activeUser, scanner);
+        } catch (SQLException e) {
+            System.out.println("An error occurred during the withdrawal: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
     public void proccessTransactionsHistory(User activeUser, Scanner scanner) {
         BankAccount account = activeUser.getUserAccounts().size() > 1 ? 
         proccessChooseAccount(activeUser, scanner) : activeUser.getUserAccounts().get(0);
 
         if(account.getTransactionHistory().size() == 0) {
             System.out.println("At the moment, there haven't been any transactions made.\n");
+            openProfile(activeUser, scanner);
         } else {
-            account.getTransactionHistory();
-            System.out.println();
+            account.showTransactionsHistory();
             openProfile(activeUser, scanner);
         }
     }
 
     public BankAccount proccessChooseAccount(User activeUser, Scanner scanner) {
-        System.out.println("Please enter the number which account you want use.");
-        String provided = scanner.nextLine();
-        
-        if(checkNum(provided)) {
-            if(activeUser.getUserAccounts().get(Integer.valueOf(provided)) == null) {
-                System.out.println("Please, enter correct number.\n");
-                proccessChoise3(activeUser, scanner);
-            } else {
-                return activeUser.getUserAccounts().get(Integer.valueOf(provided));
-            }
-        } else {
-            System.out.println("Please, enter correct number.");
+        int index = Integer.parseInt(enterNumForChooseAccount(scanner));
+
+        if(index == 0) {
+            proccessChoise3(activeUser, scanner);
+        }
+        if(activeUser.getUserAccounts().size() < index) {
             proccessChoise3(activeUser, scanner);
         }
 
-        return null;
+        return activeUser.getUserAccounts().get(index - 1);
+    }
+
+    public String enterName(Scanner scanner) {
+        String providedName = "";
+        for(int i = 0; i < 3; i++) {
+            System.out.println("\nPlease, enter your name: ");
+            providedName = scanner.nextLine();
+            if(!checkName(providedName)) {
+                System.out.println("Incorrect name!\n");
+            } else {
+                break;
+            }
+        }
+        return providedName;
+    }
+    public String enterPassword(Scanner scanner) {
+        String providedPassword = "";
+        for(int i = 0; i < 3; i++) {
+            System.out.println("Please, enter your password: ");
+            providedPassword  = scanner.nextLine();
+            if(!checkPassword(providedPassword )) {
+                System.out.println("The password must contain at least 8 characters, including at least " +
+                "one digit, one lowercase letter, one uppercase letter, and one special character from the set @#$%^&+=.\n");
+            } else {
+                break;
+            }
+        }
+        return providedPassword;
+    }
+    public String enterAddress(Scanner scanner) {
+        String providedAddress= "";
+        for(int i = 0; i < 3; i++) {
+            System.out.println("Please, enter your address:\nExample: Black Street 2-54");
+            providedAddress = scanner.nextLine();
+            if(!checkAddress(providedAddress)) {
+                System.out.println("Incorrect address!\n");
+            } else {
+                break;
+            }
+        }
+        return providedAddress;
+    }
+    public String enterUserID(Scanner scanner) {
+        String providedUserID= "";
+        for(int i = 0; i < 3; i++) {
+            System.out.println("\nPlease, enter your userID: ");
+            providedUserID = scanner.nextLine();
+            if(!checkUserID(providedUserID)) {
+                System.out.println("UserID most contain 6 numbers!\n");
+            } else {
+                break;
+            }
+        }
+        return providedUserID;
+    }
+    public String enterAmount(BankAccount account, Scanner scanner) {
+        String providedAmount= "";
+        for(int i = 0; i < 3; i++) {
+            System.out.println("\nPlease enter amount.");
+            providedAmount = scanner.nextLine();
+            if(!account.correctSum(providedAmount)) {
+                System.out.println("Please, provide correct amount for transfer.\n");
+            } else {
+                break;
+            }
+        }
+        return providedAmount;
+    }
+    public String enterAccountNumber(BankAccount account, Scanner scanner) {
+        String providedAccountNumber= "";
+        for(int i = 0; i < 3; i++) {
+            System.out.println("\nPlease enter the account number to which you wish to transfer money.");
+            providedAccountNumber = scanner.nextLine();
+            if(!account.correctAccount(providedAccountNumber)) {
+                System.out.println("Please, enter the correct account number.\n");
+                continue;
+            } else if(!bank.accountPresent(providedAccountNumber)) {
+                System.out.println("Please, check account number.\n");
+                continue;
+            } else {
+                break;
+            }
+        }
+        return providedAccountNumber;
+    }
+    public String enterNumForChooseAccount(Scanner scanner) {
+        System.out.println("\nEnter the account number you want to use.");
+        String provided = scanner.nextLine();
+
+        if(!checkNum(provided)) {
+            System.out.println("Please, enter correct number.");
+            return "";
+        }   
+        return provided;
     }
 
     public boolean checkName(String provided) {
@@ -297,7 +329,7 @@ public final class CLI_App {
         return idMatcher.matches();
     }
     public boolean checkNum(String provided) {
-        String numRegex = "[0-9]";
+        String numRegex = "^[123]$";
         Pattern numPattern = Pattern.compile(numRegex);
         Matcher numMatcher = numPattern.matcher(provided);
 
