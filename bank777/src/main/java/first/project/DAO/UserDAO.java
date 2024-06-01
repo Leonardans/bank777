@@ -1,4 +1,5 @@
 package first.project.DAO;
+
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -8,16 +9,23 @@ import first.project.User;
 
 public class UserDAO {
 
-    public void addUser(Connection connection, String name, String address, String password) throws SQLException {
-        String insertUserSQL = "INSERT INTO User (Name, Address, Password) VALUES (?, ?, ?)";
+    public void addUser(String name, String address, String password) {
+        String insertUserSQL = "INSERT INTO Users (Name, Address, Password) VALUES (?, ?, ?)";
 
-        try (PreparedStatement preparedStatement = connection.prepareStatement(insertUserSQL)) {
+        try (Connection connection = DatabaseConnection.getConnection();
+             PreparedStatement preparedStatement = connection.prepareStatement(insertUserSQL)) {
+
             preparedStatement.setString(1, name);
             preparedStatement.setString(2, address);
             preparedStatement.setString(3, password);
             preparedStatement.executeUpdate();
+            System.out.println("User added successfully.");
+
+        } catch (SQLException e) {
+            e.printStackTrace();
         }
     }
+    
 
     public User getUserById(Connection connection, int userId) throws SQLException {
         String selectUserSQL = "SELECT * FROM User WHERE UserID = ?";

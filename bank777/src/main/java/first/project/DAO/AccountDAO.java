@@ -5,55 +5,52 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
-public class AccountDAO {
-
-    public void updateAccountBalance(int accountId, double newBalance) throws SQLException {
-        String updateBalanceSQL = "UPDATE Account SET Balance = ? WHERE AccountID = ?";
-
-        try (Connection connection = DatabaseConnection.getConnection();
-             PreparedStatement preparedStatement = connection.prepareStatement(updateBalanceSQL)) {
-            preparedStatement.setDouble(1, newBalance);
-            preparedStatement.setInt(2, accountId);
-            preparedStatement.executeUpdate();
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-    }
-
-    public double getAccountBalance(int accountId) throws SQLException {
-        String selectBalanceSQL = "SELECT Balance FROM Account WHERE AccountID = ?";
-        double balance = 0.0;
-
-        try (Connection connection = DatabaseConnection.getConnection();
-             PreparedStatement preparedStatement = connection.prepareStatement(selectBalanceSQL)) {
-            preparedStatement.setInt(1, accountId);
-            ResultSet resultSet = preparedStatement.executeQuery();
-            if (resultSet.next()) {
-                balance = resultSet.getDouble("Balance");
-            }
-        }catch (SQLException e) {
-            e.printStackTrace();
-        }
-
-
-        return balance;
-    }
-    public void addAccount(int userId, String accountNumber, double balance) throws SQLException {
-        String insertAccountSQL = "INSERT INTO Account (UserID, AccountNumber, Balance) VALUES (?, ?, ?)";
-
-        try (Connection connection = DatabaseConnection.getConnection();
-             PreparedStatement preparedStatement = connection.prepareStatement(insertAccountSQL)) {
-            preparedStatement.setInt(1, userId);
-            preparedStatement.setString(2, accountNumber);
-            preparedStatement.setDouble(3, balance);
-            preparedStatement.executeUpdate();
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-    }
-}
-
+    public class AccountDAO {
+        String INSERT_ACCOUNT_SQL = "INSERT INTO Account (accauntId, aserId, accountNumber, Balance) VALUES (?, ?, ?, ?)";
     
+        public void addAccount(String accountId, int userId, String accountNumber, double balance) {
+            String insertAccountSQL = "INSERT INTO Account (AccountID, UserID, AccountNumber, Balance) VALUES (?, ?, ?, ?)";
+        
+            try (Connection connection = DatabaseConnection.getConnection();
+                 PreparedStatement preparedStatement = connection.prepareStatement(insertAccountSQL)) {
+                
+                preparedStatement.setString(1, accountId);
+                preparedStatement.setInt(2, userId);
+                preparedStatement.setString(3, accountNumber);
+                preparedStatement.setDouble(4, balance);
+                preparedStatement.executeUpdate();
+                System.out.println("Account added successfully.");
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
+        
+        public void updateAccountBalance(int accountId, double amount) throws SQLException {
+            String getBalanceSQL = "SELECT Balance FROM Account WHERE AccountID = ?";
+            String updateBalanceSQL = "UPDATE Account SET Balance = ? WHERE AccountID = ?";
 
+            try (Connection connection = DatabaseConnection.getConnection();
+                 PreparedStatement getStatement = connection.prepareStatement(getBalanceSQL);
+                PreparedStatement updateStatement = connection.prepareStatement(updateBalanceSQL)) {
 
-    // Другие методы для работы с аккаунтами (addAccount, deleteAccount и т.д.)
+                // Получаем текущий баланс
+                getStatement.setInt(1, accountId);
+                ResultSet resultSet = getStatement.executeQuery();
+            if (resultSet.next()) {
+                double currentBalance = resultSet.getDouble("Balance");
+                double updatedBalance = currentBalance + amount; // Обновляемый баланс
+
+                // Обновляем баланс в базе данных
+                updateStatement.setDouble(1, updatedBalance);
+                updateStatement.setInt(2, accountId);
+                updateStatement.executeUpdate();
+            } else {
+                System.out.println("Account not found!");
+            }
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }   
+
+    }
+    

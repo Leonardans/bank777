@@ -1,36 +1,44 @@
 package first.project.DAO;
 
 import java.sql.Connection;
+import java.sql.DriverManager;
 import java.sql.SQLException;
 
-import com.zaxxer.hikari.HikariConfig;
-import com.zaxxer.hikari.HikariDataSource;
-
 public class DatabaseConnection {
-    private static final String URL = "jdbc:mysql://localhost:3306/bankdb";
-    private static final String USER = "root";
-    private static final String PASSWORD = "password";
+    private static final String URL = "jdbc:mysql://localhost:3306/your-database-name";
+    private static final String USER = "your-username";
+    private static final String PASSWORD = "your-password";
+    private static Connection connection;
 
-
-    private static HikariDataSource dataSource;
-
+    // Загрузка драйвера JDBC
     static {
-        HikariConfig config = new HikariConfig();
-        config.setJdbcUrl(URL);
-        config.setUsername(USER);
-        config.setPassword(PASSWORD);
-        config.setMaximumPoolSize(10); // Максимальное количество соединений в пуле
-        config.setMinimumIdle(5); // Минимальное количество неиспользуемых соединений
-        dataSource = new HikariDataSource(config);
-    }
-    
-    public static Connection getConnection() throws SQLException {
-        //return DriverManager.getConnection(URL, USER, PASSWORD);
-        return dataSource.getConnection();
+        try {
+            Class.forName("com.mysql.cj.jdbc.Driver");
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+        }
     }
 
-    public void updateAccountBalance(int accountID, Double balance) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'updateAccountBalance'");
+    // Получение соединения
+    public static Connection getConnection() {
+        if (connection == null) {
+            try {
+                connection = DriverManager.getConnection(URL, USER, PASSWORD);
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
+        return connection;
+    }
+
+    // Закрытие соединения
+    public static void closeConnection() {
+        if (connection != null) {
+            try {
+                connection.close();
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
     }
 }

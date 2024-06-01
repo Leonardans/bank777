@@ -1,8 +1,16 @@
 package first.project;
 
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
+
+import first.project.DAO.AccountDAO;
+import first.project.DAO.DatabaseConnection;
+import first.project.DAO.UserDAO;
 
 public class Bank {
     private static final Bank instance = new Bank();
@@ -12,6 +20,8 @@ public class Bank {
     private final List<Admin> admins;
     private final List<User> users;
     private final List<BankAccount> accounts;
+    private UserDAO userDAO;
+    private AccountDAO accDAO;
 
     private Bank() {
         this.name = "bank777";
@@ -155,21 +165,30 @@ public class Bank {
     public int createNewProfile(String name, String address, String password) {
         int id = generateUserID();
         users.add(new User(id, name, address, password));
-        
+        userDAO.addUser(name, address, password);
+
         return id;
     }
 
     public boolean login(int id, String password) {
         boolean check = false;
-        for (User user : users) {
-            if (user.getUserID() == id) {
-                check = password.equals(user.getPassword());
-                break;
-            }
+        String selectUserSQL = "SELECT UserID, Password FROM User WHERE UserID = ?";
+
+        try (Connection connection = DatabaseConnection.getConnection();
+            PreparedStatement preparedStatement = connection.prepareStatement(selectUserSQL)) {
+            preparedStatement.setInt(1, id);
+            ResultSet resultSet = preparedStatement.executeQuery();
+        if (resultSet.next()) {
+            String storedPassword = resultSet.getString("Password");
+            check = password.equals(storedPassword);
+        }
+        } catch (SQLException e) {
+            e.printStackTrace();
         }
 
         return check;
     }
+
 
     public User systemFindUser(int id) {
         for (User user : users) {
@@ -189,6 +208,7 @@ public class Bank {
         BankAccount newAccount = new BankAccount(accID, accNum, 0D, user.getUserID(), this);
         user.plusOne(newAccount);
         accounts.add(newAccount);
+        accDAO.addAccount(accNum, accID, accNum, accID);
 
         return true;
     }

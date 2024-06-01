@@ -1,9 +1,10 @@
 package first.project;
 
-import java.sql.SQLException;
 import java.util.Scanner;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import first.project.DAO.DatabaseSetup;
 
 public final class CLI_App {
     Bank bank = Bank.getInstance();
@@ -131,53 +132,47 @@ public final class CLI_App {
     }
     
     public void proccessWithdrawal(User activeUser, Scanner scanner) {
-        try {
-            BankAccount fromAccount = activeUser.getUserAccounts().size() > 1 ? 
-            proccessChooseAccount(activeUser, scanner) : activeUser.getUserAccounts().get(0);
-            BankAccount toAccount = bank.getAccountForTransfer(enterAccountNumber(fromAccount, scanner));
+        BankAccount fromAccount = activeUser.getUserAccounts().size() > 1 ? 
+        proccessChooseAccount(activeUser, scanner) : activeUser.getUserAccounts().get(0);
+        BankAccount toAccount = bank.getAccountForTransfer(enterAccountNumber(fromAccount, scanner));
 
-            if(toAccount == null) {
-                System.out.println("Transfer not executed.\n");
-                openProfile(activeUser, scanner);
-            }
-    
-            double amount = Double.parseDouble(enterAmount(toAccount, scanner));
-            if(amount == 0D) {
-                System.out.println("Transfer not executed.\n");
-                openProfile(activeUser, scanner);
-            }
-            
-            if(fromAccount.withdrawal(toAccount, amount)) {
-                System.out.println("Transfer was successfully executed.\n");
-            } else {
-                System.out.println("Transfer not executed.\n");
-            }
-
+        if(toAccount == null) {
+            System.out.println("Transfer not executed.\n");
             openProfile(activeUser, scanner);
-        } catch (SQLException e) {
-            System.out.println("An error occurred during the withdrawal: " + e.getMessage());
-            e.printStackTrace();
         }
+
+        double amount = Double.parseDouble(enterAmount(toAccount, scanner));
+        if(amount == 0D) {
+            System.out.println("Transfer not executed.\n");
+            openProfile(activeUser, scanner);
+        }
+        
+        if(fromAccount.withdrawal(toAccount, amount)) {
+            System.out.println("Transfer was successfully executed.\n");
+        } else {
+            System.out.println("Transfer not executed.\n");
+        }
+
+        openProfile(activeUser, scanner);
     }
 
     public void proccessDeposit(User activeUser, Scanner scanner) {
-        try {
-            BankAccount account = activeUser.getUserAccounts().size() > 1 ? 
-            proccessChooseAccount(activeUser, scanner) : activeUser.getUserAccounts().get(0);
+        BankAccount account = activeUser.getUserAccounts().size() > 1 ? 
+        proccessChooseAccount(activeUser, scanner) : activeUser.getUserAccounts().get(0);
 
-            String amount = enterAmount(account, scanner);
+        String amount = enterAmount(account, scanner);
 
-            if(amount.equals("")) {
-                proccessChoise3(activeUser, scanner);
-            }
-
-            account.deposit(Double.parseDouble(amount));
-            System.out.println(amount + " was successfully added to your account.\n");
-            openProfile(activeUser, scanner);
-        } catch (SQLException e) {
-            System.out.println("An error occurred during the withdrawal: " + e.getMessage());
-            e.printStackTrace();
+        if(amount.equals("")) {
+            proccessChoise3(activeUser, scanner);
         }
+
+        if(account.deposit(Double.parseDouble(amount))) {
+            System.out.println(amount + " was successfully added to your account.\n");
+        } else {
+            System.out.println("Deposit not executed.\n");
+        }
+        
+        openProfile(activeUser, scanner);
     }
 
     public void proccessTransactionsHistory(User activeUser, Scanner scanner) {
@@ -337,6 +332,8 @@ public final class CLI_App {
     }
 
     public static void main(String[] args) {
+        DatabaseSetup.setupDatabase();
+        
         CLI_App bank777 = new CLI_App();
         bank777.openBank();
     }
