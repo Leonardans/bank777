@@ -1,44 +1,26 @@
 package first.project.DAO;
-
 import java.sql.Connection;
-import java.sql.DriverManager;
 import java.sql.SQLException;
 
+import com.zaxxer.hikari.HikariConfig;
+import com.zaxxer.hikari.HikariDataSource;
+
 public class DatabaseConnection {
-    private static final String URL = "jdbc:mysql://localhost:3306/bank777_Database";
+    private static final String URL = "jdbc:mysql://localhost:3306/sys";
     private static final String USER = "root";
-    private static final String PASSWORD = "password1";
-    private static Connection connection;
+    private static final String PASSWORD = "Leonard1234$";
+    
+    private static final HikariDataSource dataSource;
 
-    // Загрузка драйвера JDBC
     static {
-        try {
-            Class.forName("com.mysql.cj.jdbc.Driver");
-        } catch (ClassNotFoundException e) {
-            e.printStackTrace();
-        }
+        HikariConfig config = new HikariConfig();
+        config.setJdbcUrl(URL);
+        config.setUsername(USER);
+        config.setPassword(PASSWORD);
+        dataSource = new HikariDataSource(config);
     }
 
-    // Получение соединения
-    public static Connection getConnection() {
-        if (connection == null) {
-            try {
-                connection = DriverManager.getConnection(URL, USER, PASSWORD);
-            } catch (SQLException e) {
-                e.printStackTrace();
-            }
-        }
-        return connection;
-    }
-
-    // Закрытие соединения
-    public static void closeConnection() {
-        if (connection != null) {
-            try {
-                connection.close();
-            } catch (SQLException e) {
-                e.printStackTrace();
-            }
-        }
+    public static Connection getConnection() throws SQLException {
+        return dataSource.getConnection();
     }
 }

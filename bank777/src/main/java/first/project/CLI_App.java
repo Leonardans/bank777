@@ -1,5 +1,6 @@
 package first.project;
 
+import java.util.List;
 import java.util.Scanner;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -76,9 +77,14 @@ public final class CLI_App {
         }
         int userID = bank.createNewProfile(name, address, password);
 
-        System.out.println("\nNew profile was created! Thank you for choosing our bank. We assure you that you will be satisfied with our services!");
-        System.out.println("Your userID is " + userID + " please, remember it!\n");
-        openBank();
+        if(userID == 0) {
+            System.out.println("Profile not created.\n");
+            openBank();
+        } else {
+            System.out.println("\nNew profile was created! Thank you for choosing our bank. We assure you that you will be satisfied with our services!");
+            System.out.println("Your userID is " + userID + " please, remember it!\n");
+            openBank();
+        }
     }
 
     public void proccessChoise2(User activeUser, Scanner scanner) {
@@ -134,15 +140,11 @@ public final class CLI_App {
     public void proccessWithdrawal(User activeUser, Scanner scanner) {
         BankAccount fromAccount = activeUser.getUserAccounts().size() > 1 ? 
         proccessChooseAccount(activeUser, scanner) : activeUser.getUserAccounts().get(0);
+
         BankAccount toAccount = bank.getAccountForTransfer(enterAccountNumber(fromAccount, scanner));
-
-        if(toAccount == null) {
-            System.out.println("Transfer not executed.\n");
-            openProfile(activeUser, scanner);
-        }
-
         double amount = Double.parseDouble(enterAmount(toAccount, scanner));
-        if(amount == 0D) {
+
+        if(toAccount == null || amount == 0D) {
             System.out.println("Transfer not executed.\n");
             openProfile(activeUser, scanner);
         }
@@ -179,12 +181,15 @@ public final class CLI_App {
         BankAccount account = activeUser.getUserAccounts().size() > 1 ? 
         proccessChooseAccount(activeUser, scanner) : activeUser.getUserAccounts().get(0);
 
-        if(account.getTransactionHistory().size() == 0) {
+        List<Transaction> history = account.showTransactionsHistory();
+        if(history.size() == 0) {
             System.out.println("At the moment, there haven't been any transactions made.\n");
             openProfile(activeUser, scanner);
         } else {
-            account.showTransactionsHistory();
-            openProfile(activeUser, scanner);
+            for(Transaction transaction : history) {
+                System.out.println(transaction);
+                openProfile(activeUser, scanner);
+            }
         }
     }
 
@@ -336,5 +341,6 @@ public final class CLI_App {
         
         CLI_App bank777 = new CLI_App();
         bank777.openBank();
+
     }
 }

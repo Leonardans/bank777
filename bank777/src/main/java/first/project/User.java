@@ -1,7 +1,7 @@
 package first.project;
 
-import java.util.ArrayList;
 import java.util.List;
+
 
 public class User {
     private final int userID;
@@ -15,7 +15,6 @@ public class User {
         this.name = name;
         this.address = address;
         this.password = password;
-        this.userAccounts = new ArrayList<>();
     }
 
     public int getUserID() {
@@ -28,17 +27,24 @@ public class User {
     public String getPassword() {
         return password;
     }
+    
     public void changePassword(String password) {
         this.password = password;
     }
+    
     public List<BankAccount> getUserAccounts() {
         return userAccounts;
     }
+    public void setUserAccountsFromDatabase(List<BankAccount> fromDatabase) {
+        userAccounts = fromDatabase;
+    }
+
     public void showAccounts() {
         for(BankAccount account : userAccounts) {
             System.out.println(account);
         }
     }
+    
     public boolean plusOne(BankAccount account) {
         if(userAccounts.size() >= 3) {
             return false;

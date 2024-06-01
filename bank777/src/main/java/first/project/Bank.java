@@ -1,15 +1,11 @@
 package first.project;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
 import first.project.DAO.AccountDAO;
-import first.project.DAO.DatabaseConnection;
+import first.project.DAO.BankDAO;
+import first.project.DAO.TransactionDAO;
 import first.project.DAO.UserDAO;
 
 public class Bank {
@@ -17,70 +13,40 @@ public class Bank {
     private final String name;
     private Double totalMoney;
     private Double bankFee;
-    private final List<Admin> admins;
-    private final List<User> users;
-    private final List<BankAccount> accounts;
     private UserDAO userDAO;
     private AccountDAO accDAO;
+    private TransactionDAO transDAO;
 
     private Bank() {
         this.name = "bank777";
         totalMoney = 1_000_000D;
         bankFee = 0D;
-        admins = new ArrayList<>();
-        users = new ArrayList<>();
-        accounts = new ArrayList<>();
+        userDAO = new UserDAO();
+        accDAO = new AccountDAO();
+        transDAO = new TransactionDAO();
     }
-    static {
-        Bank bank = Bank.getInstance();
-        bank.loadInitialData();
+     static {
+        if(!BankDAO.insertBankData("bank777", 1_000_000D, 0, 0)) {
+            instance.setTotalMoney(BankDAO.getTotalMoney());
+            instance.plusFee(BankDAO.getBankFee());
+        }
     }
-    
     public static Bank getInstance() {
         return instance;
     }
 
-    private void loadInitialData() {
-        users.add(new User(generateUserID(), "User1", "Address1", "password1"));
-        users.add(new User(generateUserID(), "User2", "Address2", "password2"));
-        users.add(new User(generateUserID(), "User3", "Address3", "password3"));
-        users.add(new User(generateUserID(), "User4", "Address4", "password4"));
-        users.add(new User(generateUserID(), "User5", "Address5", "password5"));
-
-        accounts.add(new BankAccount(generateAccountID(), generateAccountNumber(), 10_000D, users.get(0).getUserID(), this));
-        accounts.add(new BankAccount(generateAccountID(), generateAccountNumber(), 10_000D, users.get(1).getUserID(), this));
-        accounts.add(new BankAccount(generateAccountID(), generateAccountNumber(), 10_000D, users.get(2).getUserID(), this));
-        accounts.add(new BankAccount(generateAccountID(), generateAccountNumber(), 10_000D, users.get(3).getUserID(), this));
-        accounts.add(new BankAccount(generateAccountID(), generateAccountNumber(), 10_000D, users.get(4).getUserID(), this));
-
-        users.get(0).plusOne(accounts.get(0));
-        users.get(1).plusOne(accounts.get(1));
-        users.get(2).plusOne(accounts.get(2));
-        users.get(3).plusOne(accounts.get(3));
-        users.get(4).plusOne(accounts.get(4));
-    }
-
-    public void setMoney(Double money) {
+    public void setTotalMoney(Double money) {
         totalMoney+= money;
     }
-    public List<BankAccount> getAccounts() {
-        return accounts;
-    }
-    public String getName() {
-        return name;
-    }
-    public List<Admin> getAdmins() {
-        return admins;
-    }
-    public List<User> getUsers() {
-        return users;
-    }
+  
     public Double getTotalMoney() {
         return totalMoney;
     }
+    
     public Double  getBankFee() {
         return bankFee;
     }
+    
     public void plusFee(double amount) {
         bankFee+= amount;
     }
@@ -90,127 +56,97 @@ public class Bank {
         int id = random.nextInt(899_999) + 100_000;
 
         while(true) {
-            boolean check = true;
-            for (User user : users) {
-                if (id == user.getUserID()) {
-                    id = random.nextInt(899_999) + 100_000;
-                    check = false;
-                    break;
-                }
-            }
-            if(check) {
-                break;
-            }
+            boolean check = userDAO.checkUserIdExistence(id);
+            if (check) id = random.nextInt(899_999) + 100_000;
+            else break;
         }
+
         return id;
     }
+    
     public int generateAccountID() {
         Random random = new Random();
         int accID = random.nextInt(8_999_999) + 1_000_000;
 
         while(true) {
-            boolean check = true;
-            for (BankAccount account : accounts) {
-                if (accID == account.getAccountID()) {
-                    accID = random.nextInt(8_999_999) + 1_000_000;
-                    check = false;
-                }
-            }
-            if(check) break;
+            boolean check = accDAO.doesAccountIdExist(accID);
+            if(check) accID = random.nextInt(8_999_999) + 1_000_000;
+            else break;
         }
+        
         return accID;
     }
+    
     public String generateAccountNumber() {
         Random random = new Random();
         String accNum = "E" + (random.nextLong(8_999_999_999_999L) + 1_000_000_000_000L);
 
         while(true) {
-            boolean check = true;
-            for (BankAccount account : accounts) {
-                if (accNum.equals(account.getAccountNumber())) {
-                    accNum = "E" + (random.nextLong(8_999_999_999_999L) + 1_000_000_000_000L);
-                    check = false;
-                }
-            }
-            if(check) break;
+            boolean check = accDAO.doesAccountNumberExist(accNum);
+            if (check) accNum = "E" + (random.nextLong(8_999_999_999_999L) + 1_000_000_000_000L);  
+            else break; 
         }
+
         return accNum;
     }
+    
     public int generateTransactionID() {
         Random random = new Random();
-        return random.nextInt(88_999_999) + 10_000_000;
+        int transId = random.nextInt(88_999_999) + 10_000_000;
+
+        while(true) {
+            boolean check = transDAO.checkTransactionExistence(transId);
+            if (check) transId = random.nextInt(88_999_999) + 10_000_000; 
+            else break; 
+        }
+
+        return transId;
     }
 
     public boolean accountPresent(String accountNumber) {
-        for (BankAccount account : accounts) {
-            if (account.getAccountNumber().equals(accountNumber)) {
-                return true;
-            }
-        }
-       return  false;
+       return accDAO.doesAccountNumberExist(accountNumber);
     }
+    
     public BankAccount getAccountForTransfer(String accountNumber) {
-        for (BankAccount account : accounts) {
-            if (account.getAccountNumber().equals(accountNumber)) {
-                return account;
-            }
-        }
-        return null;
-    }
-
-    public void newAdmin(int userID, String password) {
-        admins.add(new Admin(userID, password));
+        return accDAO.getAccountByAccountNumber(accountNumber);
     }
 
     public int createNewProfile(String name, String address, String password) {
         int id = generateUserID();
-        users.add(new User(id, name, address, password));
-        userDAO.addUser(name, address, password);
+        
+        if(userDAO.addUser(id, name, address, password)) return id;
 
-        return id;
+        return 0;
     }
 
     public boolean login(int id, String password) {
-        boolean check = false;
-        String selectUserSQL = "SELECT UserID, Password FROM User WHERE UserID = ?";
+        User someOne = userDAO.getUserByUsernameAndPassword(id, password);
 
-        try (Connection connection = DatabaseConnection.getConnection();
-            PreparedStatement preparedStatement = connection.prepareStatement(selectUserSQL)) {
-            preparedStatement.setInt(1, id);
-            ResultSet resultSet = preparedStatement.executeQuery();
-        if (resultSet.next()) {
-            String storedPassword = resultSet.getString("Password");
-            check = password.equals(storedPassword);
-        }
-        } catch (SQLException e) {
-            e.printStackTrace();
+        if(someOne == null) {
+            return false;
         }
 
-        return check;
+        someOne.setUserAccountsFromDatabase(userDAO.getUserAccounts(id));
+        return true;
     }
 
-
     public User systemFindUser(int id) {
-        for (User user : users) {
-            if (id == user.getUserID()) {
-                return user;
-            }
-        }
-        return null;
+       return userDAO.getUserById(id);
     }
     
     public boolean openNewAccount(User user) {
-        if(user.getUserAccounts().size() >= 3) {
+        List<BankAccount> userAccounts = userDAO.getUserAccounts(user.getUserID());
+
+        if(userAccounts.size() >= 3) {
             return false;
         }
         int accID = generateAccountID();
         String accNum = generateAccountNumber();
-        BankAccount newAccount = new BankAccount(accID, accNum, 0D, user.getUserID(), this);
+        BankAccount newAccount = new BankAccount(accID, accNum, 0D, user.getUserID());
         user.plusOne(newAccount);
-        accounts.add(newAccount);
-        accDAO.addAccount(accNum, accID, accNum, accID);
 
-        return true;
+        if(accDAO.addAccount(accID,user.getUserID(), accNum, accID)) return true;
+        else return false;
     }
 
     @Override

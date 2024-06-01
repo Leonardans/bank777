@@ -1,8 +1,6 @@
 package first.project;
 
-import java.sql.SQLException;
 import java.time.LocalDate;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -14,20 +12,18 @@ public class BankAccount {
     private final int userID;
     private final String accountNumber;
     private Double balance;
-    private final List<Transaction> transactionHistory;
-    private final Bank bank;
     private TransactionDAO transDAO;
     private AccountDAO accDAO;
+    private Bank bank;
 
-    public BankAccount(int accountID, String accountNumber, Double balance, int userID, Bank bank) {
+    public BankAccount(int accountID, String accountNumber, Double balance, int userID){
         this.accountID = accountID;
         this.accountNumber = accountNumber;
         this.balance = balance;
         this.userID = userID;
-        transactionHistory = new ArrayList<>();
-        this.bank = bank;
         transDAO = new TransactionDAO();
         accDAO = new AccountDAO();
+        bank = Bank.getInstance();
     }
 
     public int getAccountID() {
@@ -40,7 +36,7 @@ public class BankAccount {
     public Double getBalance() {
         return balance;
     }
-    public void changeBalance(Double sum, String mark) {
+    public void addToBalance(Double sum, String mark) {
         switch (mark) {
             case "+" -> this.balance += sum;
             case "-" -> this.balance -= sum;
@@ -50,24 +46,8 @@ public class BankAccount {
         return userID;
     }
 
-    public List<Transaction> getTransactionHistory() {
-        return transactionHistory;
-    }
-    public void addTransaction(Transaction transaction) {
-        transactionHistory.add(transaction);
-    }
-    public void showTransactionsHistory() {
-        List<Transaction> transactionHistoryFromDatabase = transDAO.getTransactionsByAccountID(this.accountID);
-
-        if(transactionHistoryFromDatabase.size() == 0) {
-            for(Transaction transaction : transactionHistory) {
-                System.out.println(transaction);
-            }
-        } else {
-            for(Transaction transaction : transactionHistoryFromDatabase) {
-                System.out.println(transaction);
-            }
-        }  
+    public List<Transaction> showTransactionsHistory() {
+        return transDAO.getTransactionsByAccountID(this.accountID); 
     }
     
     public boolean correctAccount(String provided) {
@@ -84,22 +64,16 @@ public class BankAccount {
     public boolean deposit(double amount) {
         int transID = bank.generateTransactionID();
        
-        try {
-            transDAO.addTransaction(transID, this.accountID, "Deposit", amount, "Deposit", LocalDate.now());
-            accDAO.updateAccountBalance(this.accountID, amount);
-        } catch (SQLException e) {
-            System.out.println("An error occurred during the withdrawal: " + e.getMessage());
-            e.printStackTrace();
-            return false;
-        }  
+        transDAO.addTransaction(transID, this.accountID, "Deposit", amount, "Deposit", LocalDate.now());
+        accDAO.updateAccountBalance(this.accountID, amount, true);
 
-        addTransaction(new Transaction(transID, this.accountID, "Deposit", amount,
-        "Deposit",LocalDate.now()));
-        
-        bank.setMoney(amount);
-        changeBalance(amount, "+");
-
-        return true;
+        if(transDAO.doesTransactionExists(transID)) {
+            bank.setTotalMoney(balance);
+            BankDAO.updateBankData(amount, 0D);
+            addToBalance(balance, "+");
+            return true;
+        } else 
+            return false; 
     }
 
     public boolean withdrawal(BankAccount toAccount, double amount) {
@@ -108,28 +82,21 @@ public class BankAccount {
         }
         int transactionID = bank.generateTransactionID();
         
-        try {
-            transDAO.addTransaction(transactionID, this.accountID, "Withdrawal", amount, "Withdrawal to " + this.getAccountNumber(), LocalDate.now());
-            transDAO.addTransaction(transactionID, toAccount.getAccountID(), "Deposit", amount, "Deposit from " + toAccount.getAccountNumber(), LocalDate.now());
-        
-            accDAO.updateAccountBalance(this.accountID, amount);
-            accDAO.updateAccountBalance(toAccount.getAccountID(), amount);
-        } catch (SQLException e) {
-            System.out.println("An error occurred during the withdrawal: " + e.getMessage());
-            e.printStackTrace();
-            return false;
-        }
-
-        addTransaction(new Transaction(transactionID, this.accountID, "Withdrawal", amount,
-        "Withdrawal",LocalDate.now()));
-        addTransaction(new Transaction(transactionID, toAccount.getAccountID(), "Deposit", amount,
-        "Deposit",LocalDate.now()));
-
-        this.changeBalance(amount + 1, "-");
-        bank.plusFee(1D);
-        toAccount.changeBalance(amount, "+");
+        transDAO.addTransaction(transactionID, this.accountID, "Withdrawal", amount, "Withdrawal to " + this.getAccountNumber(), LocalDate.now());
+        transDAO.addTransaction(transactionID, toAccount.getAccountID(), "Deposit", amount, "Deposit from " + toAccount.getAccountNumber(), LocalDate.now());
     
-        return true;
+        accDAO.updateAccountBalance(this.accountID, amount, false);
+        accDAO.updateAccountBalance(toAccount.getAccountID(), amount, true);
+
+
+        if(transDAO.doesTransactionExists(transactionID)) {
+            addToBalance(amount + 1, "-");
+            bank.plusFee(1D);
+            BankDAO.updateBankData(0, 1D);
+            toAccount.addToBalance(amount, "+");
+            return true;
+        } else
+            return false;
     }
 
     @Override

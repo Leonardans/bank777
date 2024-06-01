@@ -44,7 +44,7 @@ public class TransactionDAO {
         String insertTransactionSQL = "INSERT INTO Transaction (TransactionID, AccountID, TransactionType, Amount, Description, Date) VALUES (?, ?, ?, ?, ?, ?)";
         
         try (Connection connection = DatabaseConnection.getConnection();
-             PreparedStatement preparedStatement = connection.prepareStatement(insertTransactionSQL)) {
+            PreparedStatement preparedStatement = connection.prepareStatement(insertTransactionSQL)) {
             preparedStatement.setInt(1, transactionId);
             preparedStatement.setInt(2, accountId);
             preparedStatement.setString(3, transactionType);
@@ -55,6 +55,47 @@ public class TransactionDAO {
         } catch (SQLException e) {
             e.printStackTrace();
         }
+    }
+
+    public boolean doesTransactionExists(int transactionID) {
+        String selectTransactionSQL = "SELECT COUNT(*) FROM Transaction WHERE TransactionID = ?";
+        boolean exists = false;
+    
+        try (Connection connection = DatabaseConnection.getConnection();
+             PreparedStatement preparedStatement = connection.prepareStatement(selectTransactionSQL)) {
+            preparedStatement.setInt(1, transactionID);
+            ResultSet resultSet = preparedStatement.executeQuery();
+    
+            if (resultSet.next()) {
+                int count = resultSet.getInt(1);
+                exists = count > 0;
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    
+        return exists;
+    }
+    
+    
+    public boolean checkTransactionExistence(int transactionID) {
+        String selectTransactionSQL = "SELECT COUNT(*) FROM Transaction WHERE TransactionID = ?";
+        boolean exists = false;
+    
+        try (Connection connection = DatabaseConnection.getConnection();
+             PreparedStatement preparedStatement = connection.prepareStatement(selectTransactionSQL)) {
+            preparedStatement.setInt(1, transactionID);
+            ResultSet resultSet = preparedStatement.executeQuery();
+    
+            if (resultSet.next()) {
+                int count = resultSet.getInt(1);
+                exists = count > 0;
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    
+        return exists;
     }
     
     
