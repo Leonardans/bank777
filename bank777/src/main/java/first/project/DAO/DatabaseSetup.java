@@ -8,12 +8,22 @@ public class DatabaseSetup {
 
     public static void setupDatabase() {
         try (Connection connection = DatabaseConnection.getConnection(); Statement statement = connection.createStatement()) {
+            // Создание базы данных
+            String createDatabaseQuery = "CREATE DATABASE IF NOT EXISTS bank777_Database";
+            statement.executeUpdate(createDatabaseQuery);
+
+            // Использование созданной базы данных
+            String useDatabaseQuery = "bank777_Database";
+            statement.executeUpdate(useDatabaseQuery);
+
+            // Создание таблиц
             String createUserTable = "CREATE TABLE IF NOT EXISTS User (" +
                                       "UserID INT AUTO_INCREMENT PRIMARY KEY, " +
                                       "Name VARCHAR(100), " +
                                       "Address VARCHAR(255), " +
                                       "Password VARCHAR(100))";
             statement.executeUpdate(createUserTable);
+
             String createAccountTable = "CREATE TABLE IF NOT EXISTS Account (" +
                             "AccountID INT PRIMARY KEY, " +
                             "UserID INT, " +
@@ -32,6 +42,7 @@ public class DatabaseSetup {
                                 "FOREIGN KEY (AccountID) REFERENCES Account(AccountID))";
             statement.executeUpdate(createTransactionTable);
 
+            // Вставка начальных данных
             for (int i = 1; i <= 10; i++) {
                 String insertUser = String.format("INSERT INTO User (Name, Address, Password) VALUES ('User%d', 'Address%d', 'Password%d')", i, i, i);
                 statement.executeUpdate(insertUser);
