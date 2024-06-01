@@ -1,4 +1,4 @@
-package first_project.DAO;
+package first.project.DAO;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -7,40 +7,35 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
-import first_project.BankAccount;
-import first_project.User;
-import first_project.utils.IDGenerator;
+import first.project.BankAccount;
+import first.project.User;
 
 public class UserDAO {
 
-    private final BankDAO bankDAO = new BankDAO();
-
-    public int addUser(String name, String address, String password) {
-        int userID = 0;
-
+    public boolean addUser(int id, String name, String address, String password) {
         String insertUserSQL = "INSERT INTO User (UserID, Name, Address, Password) VALUES (?, ?, ?, ?)";
+    
         try (Connection connection = DatabaseConnection.getConnection()) {
+            System.out.println("Autocommit status: " + connection.getAutoCommit());
             PreparedStatement preparedStatement = connection.prepareStatement(insertUserSQL);
-
-            userID = IDGenerator.generateUserID(connection, this);
-            preparedStatement.setInt(1, userID);
+    
+            preparedStatement.setInt(1, id);
             preparedStatement.setString(2, name);
             preparedStatement.setString(3, address);
             preparedStatement.setString(4, password);
-
+        
             int rowsAffected = preparedStatement.executeUpdate();
-            if(rowsAffected > 0) {
-                bankDAO.updateTotalUsers(connection);
-            }
+            return rowsAffected > 0;
         } catch (SQLException e) {
             e.printStackTrace();
+            return false;
         }
-        return userID;
     }
-    public static User getUserById(int userId) {
+
+    public User getUserById(int userId) {
         String selectUserSQL = "SELECT * FROM User WHERE UserID = ?";
         User user = null;
-
+    
         try (Connection connection = DatabaseConnection.getConnection();
             PreparedStatement preparedStatement = connection.prepareStatement(selectUserSQL)) {
             preparedStatement.setInt(1, userId);
@@ -58,13 +53,16 @@ public class UserDAO {
         }
         return user;
     }
-    public boolean checkUserIdExistence(Connection connection, int userId) {
+
+    public boolean checkUserIdExistence(int userId) {
         String selectUserSQL = "SELECT COUNT(*) FROM User WHERE UserID = ?";
         boolean exists = false;
-
-        try (PreparedStatement preparedStatement = connection.prepareStatement(selectUserSQL)) {
+    
+        try (Connection connection = DatabaseConnection.getConnection();
+            PreparedStatement preparedStatement = connection.prepareStatement(selectUserSQL)) {
             preparedStatement.setInt(1, userId);
             ResultSet resultSet = preparedStatement.executeQuery();
+    
             if (resultSet.next()) {
                 int count = resultSet.getInt(1);
                 exists = count > 0;
@@ -72,9 +70,10 @@ public class UserDAO {
         } catch (SQLException e) {
             e.printStackTrace();
         }
-
+    
         return exists;
-    }
+    }    
+
     public List<BankAccount> getUserAccounts(int userID) {
         String selectAccountsSQL = "SELECT * FROM Account WHERE UserID = ?";
         List<BankAccount> userAccounts = new ArrayList<>();
@@ -85,10 +84,9 @@ public class UserDAO {
             ResultSet resultSet = preparedStatement.executeQuery();
             while (resultSet.next()) {
                 int accountID = resultSet.getInt("AccountID");
-                int userId = resultSet.getInt("UserID");
                 String accountNumber = resultSet.getString("AccountNumber");
                 double balance = resultSet.getDouble("Balance");
-                BankAccount account = new BankAccount(accountID, userID, accountNumber, balance);
+                BankAccount account = new BankAccount(accountID, accountNumber, balance, userID);
                 userAccounts.add(account);
             }
         } catch (SQLException e) {
@@ -97,16 +95,17 @@ public class UserDAO {
 
         return userAccounts;
     }
-    public User checkUser(int id, String password) {
+
+    public User getUserByUsernameAndPassword(int id, String password) {
         String selectUserSQL = "SELECT * FROM User WHERE UserID = ? AND Password = ?";
         User user = null;
-
+    
         try (Connection connection = DatabaseConnection.getConnection();
             PreparedStatement preparedStatement = connection.prepareStatement(selectUserSQL)) {
             preparedStatement.setInt(1, id);
             preparedStatement.setString(2, password);
             ResultSet resultSet = preparedStatement.executeQuery();
-
+    
             if (resultSet.next()) {
                 user = new User(
                     resultSet.getInt("UserID"),
@@ -118,7 +117,9 @@ public class UserDAO {
         } catch (SQLException e) {
             e.printStackTrace();
         }
-
+    
         return user;
     }
+    
+    // Другие методы для работы с пользователями (deleteUser, updateUser и т.д.)
 }

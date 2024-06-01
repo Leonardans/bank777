@@ -1,4 +1,4 @@
-package first_project;
+package first.project;
 
 import java.util.List;
 import java.util.ArrayList;
@@ -25,25 +25,32 @@ public class User {
     public String getName() {
         return name;
     }
+
     public String getPassword() {
         return password;
     }
+
     public void changePassword(String password) {
         this.password = password;
     }
+
     public List<BankAccount> getUserAccounts() {
         return userAccounts;
     }
     public synchronized void setUserAccountsFromDatabase(List<BankAccount> fromDatabase) {
         userAccounts = Objects.requireNonNullElseGet(fromDatabase, ArrayList::new);
     }
+
     public void showAccounts() {
         for(BankAccount account : userAccounts) {
             System.out.println(account);
         }
     }
-    public boolean plusOne(BankAccount account) {
-        return userAccounts.add(account);
+
+    public void plusOne(BankAccount account) {
+        if (userAccounts.size() < 3) {
+            userAccounts.add(account);
+        }
     }
 
     @Override
