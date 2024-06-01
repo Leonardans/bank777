@@ -7,7 +7,7 @@ import java.util.regex.Pattern;
 
 import first.project.DAO.DatabaseSetup;
 
-public final class CLI_App {
+public final class CLI_APP {
     Bank bank = Bank.getInstance();
 
     public void openBank() {
@@ -339,7 +339,7 @@ public final class CLI_App {
     public static void main(String[] args) {
         DatabaseSetup.setupDatabase();
         
-        CLI_App bank777 = new CLI_App();
+        CLI_APP bank777 = new CLI_APP();
         bank777.openBank();
 
     }
