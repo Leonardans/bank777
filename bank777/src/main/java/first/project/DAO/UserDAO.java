@@ -13,10 +13,11 @@ import first.project.User;
 public class UserDAO {
 
     public boolean addUser(int id, String name, String address, String password) {
-        String insertUserSQL = "INSERT INTO Users (UserID, Name, Address, Password) VALUES (?, ?, ?, ?)";
+        String insertUserSQL = "INSERT INTO User (UserID, Name, Address, Password) VALUES (?, ?, ?, ?)";
     
-        try (Connection connection = DatabaseConnection.getConnection();
-            PreparedStatement preparedStatement = connection.prepareStatement(insertUserSQL)) {
+        try (Connection connection = DatabaseConnection.getConnection()) {
+            System.out.println("Autocommit status: " + connection.getAutoCommit());
+            PreparedStatement preparedStatement = connection.prepareStatement(insertUserSQL);
     
             preparedStatement.setInt(1, id);
             preparedStatement.setString(2, name);
@@ -24,13 +25,9 @@ public class UserDAO {
             preparedStatement.setString(4, password);
         
             int rowsAffected = preparedStatement.executeUpdate();
-            if (rowsAffected > 0) {
-                return true;
-            } else {
-                return false;
-            }
-    
+            return rowsAffected > 0;
         } catch (SQLException e) {
+            e.printStackTrace();
             return false;
         }
     }
@@ -100,7 +97,7 @@ public class UserDAO {
     }
 
     public User getUserByUsernameAndPassword(int id, String password) {
-        String selectUserSQL = "SELECT * FROM User WHERE Name = ? AND Password = ?";
+        String selectUserSQL = "SELECT * FROM User WHERE UserID = ? AND Password = ?";
         User user = null;
     
         try (Connection connection = DatabaseConnection.getConnection();

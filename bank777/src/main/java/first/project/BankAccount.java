@@ -12,9 +12,9 @@ public class BankAccount {
     private final int userID;
     private final String accountNumber;
     private Double balance;
-    private TransactionDAO transDAO;
-    private AccountDAO accDAO;
-    private Bank bank;
+    private final TransactionDAO transDAO;
+    private final AccountDAO accDAO;
+    private final Bank bank;
 
     public BankAccount(int accountID, String accountNumber, Double balance, int userID){
         this.accountID = accountID;
@@ -47,9 +47,9 @@ public class BankAccount {
     }
 
     public List<Transaction> showTransactionsHistory() {
-        return transDAO.getTransactionsByAccountID(this.accountID); 
+        return transDAO.getTransactionsByAccountID(this.accountID);
     }
-    
+
     public boolean correctAccount(String provided) {
         Pattern accountPattern = Pattern.compile("^E\\d{13}$");
         Matcher accountMatcher = accountPattern.matcher(provided);
@@ -63,17 +63,17 @@ public class BankAccount {
 
     public boolean deposit(double amount) {
         int transID = bank.generateTransactionID();
-       
+
         transDAO.addTransaction(transID, this.accountID, "Deposit", amount, "Deposit", LocalDate.now());
         accDAO.updateAccountBalance(this.accountID, amount, true);
 
         if(transDAO.doesTransactionExists(transID)) {
-            bank.setTotalMoney(balance);
+            bank.setTotalMoney(amount);
             BankDAO.updateBankData(amount, 0D);
-            addToBalance(balance, "+");
+            addToBalance(amount, "+");
             return true;
-        } else 
-            return false; 
+        } else
+            return false;
     }
 
     public boolean withdrawal(BankAccount toAccount, double amount) {
@@ -81,10 +81,10 @@ public class BankAccount {
             return false;
         }
         int transactionID = bank.generateTransactionID();
-        
+
         transDAO.addTransaction(transactionID, this.accountID, "Withdrawal", amount, "Withdrawal to " + this.getAccountNumber(), LocalDate.now());
         transDAO.addTransaction(transactionID, toAccount.getAccountID(), "Deposit", amount, "Deposit from " + toAccount.getAccountNumber(), LocalDate.now());
-    
+
         accDAO.updateAccountBalance(this.accountID, amount, false);
         accDAO.updateAccountBalance(toAccount.getAccountID(), amount, true);
 

@@ -1,12 +1,14 @@
 package first.project;
 
 import java.util.List;
+import java.util.ArrayList;
+import java.util.Objects;
 
 
 public class User {
     private final int userID;
-    private String name;
-    private String address;
+    private final String name;
+    private final String address;
     private String password;
     private List<BankAccount> userAccounts;
 
@@ -27,16 +29,16 @@ public class User {
     public String getPassword() {
         return password;
     }
-    
+
     public void changePassword(String password) {
         this.password = password;
     }
-    
+
     public List<BankAccount> getUserAccounts() {
         return userAccounts;
     }
-    public void setUserAccountsFromDatabase(List<BankAccount> fromDatabase) {
-        userAccounts = fromDatabase;
+    public synchronized void setUserAccountsFromDatabase(List<BankAccount> fromDatabase) {
+        userAccounts = Objects.requireNonNullElseGet(fromDatabase, ArrayList::new);
     }
 
     public void showAccounts() {
@@ -44,13 +46,10 @@ public class User {
             System.out.println(account);
         }
     }
-    
-    public boolean plusOne(BankAccount account) {
-        if(userAccounts.size() >= 3) {
-            return false;
-        } else {
+
+    public void plusOne(BankAccount account) {
+        if (userAccounts.size() < 3) {
             userAccounts.add(account);
-            return true;
         }
     }
 
@@ -59,5 +58,4 @@ public class User {
         return "User [userID=" + userID + ", name=" + name + ", address=" + address + ", userAccounts=" + userAccounts
                 + "]";
     }
-
 }

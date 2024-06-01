@@ -30,6 +30,7 @@ public class DatabaseSetup {
                                         "BankFee DOUBLE, " +
                                         "TotalUsers INT)";
             statement.executeUpdate(createBankTableSQL);
+
             String createUserTable = "CREATE TABLE IF NOT EXISTS User (" +
                                       "UserID INT AUTO_INCREMENT PRIMARY KEY, " +
                                       "Name VARCHAR(100), " +
@@ -66,7 +67,7 @@ public class DatabaseSetup {
                     int userID = 100_000 + i;
                     String name = "User" + i;
                     String address = "Address" + i;
-                    String password = "Password" + i;
+                    String password = "Password" + i + "$";
 
                     String insertUser = "INSERT INTO User (UserID, Name, Address, Password) VALUES (?, ?, ?, ?)";
                     try (PreparedStatement preparedStatement = connection.prepareStatement(insertUser)) {

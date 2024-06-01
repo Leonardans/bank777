@@ -12,20 +12,20 @@
   </properties>
 
   <dependencies>
-    
+
 
     <!-- MySQL Connector/J -->
     <dependency>
-        <groupId>mysql</groupId>
-        <artifactId>mysql-connector-java</artifactId>
-        <version>8.0.29</version>
+      <groupId>mysql</groupId>
+      <artifactId>mysql-connector-java</artifactId>
+      <version>8.0.29</version>
     </dependency>
-    
+
     <!-- JDBC API -->
     <dependency>
-        <groupId>org.springframework</groupId>
-        <artifactId>spring-jdbc</artifactId>
-        <version>5.3.15</version>
+      <groupId>org.springframework</groupId>
+      <artifactId>spring-jdbc</artifactId>
+      <version>5.3.15</version>
     </dependency>
 
         <!-- HikariCP -->
@@ -48,8 +48,14 @@
       <version>${junit.version}</version>
       <scope>test</scope>
     </dependency>
+      <dependency>
+          <groupId>org.jetbrains</groupId>
+          <artifactId>annotations</artifactId>
+          <version>RELEASE</version>
+          <scope>compile</scope>
+      </dependency>
 
-</dependencies>
+  </dependencies>
 
 
 </project>

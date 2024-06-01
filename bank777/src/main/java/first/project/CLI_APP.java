@@ -15,65 +15,65 @@ public final class CLI_APP {
         "To get started, please enter your information or create your unique profile.");
 
         Scanner scanner = new Scanner(System.in);
-        
-        proccessChoise1(scanner);
+
+        processChoose1(scanner);
     }
 
     public void openProfile(User activeUser, Scanner scanner) {
-        System.out.println("\nWelcome, " + activeUser.getName() + " !\n");
+        System.out.println("\nWelcome, " + activeUser.getName() + " !");
 
         if(activeUser.getUserAccounts().isEmpty()) {
             System.out.println("Currently, you do not have any active accounts open. If you wish, " +
             "you can quickly and, absolutely safely open a new account at the most " +
             "reliable bank in the city!");
-            proccessChoise2(activeUser, scanner);
+            processChoose2(activeUser, scanner);
         } else {
-            proccessChoise3(activeUser, scanner);
+            processChoose3(activeUser, scanner);
         }
-
     }
 
-    public void proccessChoise1(Scanner scanner) {
-        System.out.println("1. Login");
+    public void processChoose1(Scanner scanner) {
+        System.out.print("1. Login  ");
         System.out.println("2. Create new profile.");
         switch (scanner.nextLine()) {
             case "1":
-                proccessLogin(scanner);
+                processLogin(scanner);
                 break;
             case "2":
-                proccessCreateNewProfile(scanner);
+                processCreateNewProfile(scanner);
                 break;
             default:
                 System.out.println("Please, provide only 1 - if you want to login or " +
                 "2 - if you want create new profile\n");
-                proccessChoise1(scanner);
-                
-        } 
+                processChoose1(scanner);
+
+        }
     }
-    public void proccessLogin(Scanner scanner) {
+    public void processLogin(Scanner scanner) {
         int id = Integer.parseInt(enterUserID(scanner));
         String password = enterPassword(scanner);
 
         if(id == 0) {
             System.out.println("Please, check userID or password.\n");
-            proccessChoise1(scanner);
+            processChoose1(scanner);
         }
 
-        if(bank.login(id, password)) {
+        User user = bank.login(id, password);
+        if(user != null) {
             System.out.println("You login successfully!");
-            openProfile(bank.systemFindUser(id), scanner);
+            openProfile(user, scanner);
         } else {
             System.out.println("Please, check userID or password.\n");
-            proccessChoise1(scanner);
+            processChoose1(scanner);
         }
     }
-    public void proccessCreateNewProfile(Scanner scanner) {
-        System.out.println("\nIt's your best choise for today!\n");
+    public void processCreateNewProfile(Scanner scanner) {
+        System.out.println("\nIt's your best choose for today!");
         String name = enterName(scanner);
         String password = enterPassword(scanner);
         String address = enterAddress(scanner);
-        if(name.equals("")) {
-            proccessChoise1(scanner);
+        if(name.isEmpty()) {
+            processChoose1(scanner);
         }
         int userID = bank.createNewProfile(name, address, password);
 
@@ -82,25 +82,23 @@ public final class CLI_APP {
             openBank();
         } else {
             System.out.println("\nNew profile was created! Thank you for choosing our bank. We assure you that you will be satisfied with our services!");
-            System.out.println("Your userID is " + userID + " please, remember it!\n");
+            System.out.println("Your userID is " + userID + " please, remember it!");
             openBank();
         }
     }
 
-    public void proccessChoise2(User activeUser, Scanner scanner) {
+    public void processChoose2(User activeUser, Scanner scanner) {
         System.out.println("\n1. Open new account");
 
         switch (scanner.nextLine()) {
-            case "1":
-                    proccessOpenNewAccount(activeUser, scanner);
-                break;
-        
-            default:
+            case "1" -> processOpenNewAccount(activeUser, scanner);
+            default -> {
                 System.out.println("Please, provide correct number.\n");
-                proccessChoise2(activeUser, scanner);
+                processChoose2(activeUser, scanner);
+            }
         }
     }
-    public void proccessOpenNewAccount(User activeUser, Scanner scanner) {
+    public void processOpenNewAccount(User activeUser, Scanner scanner) {
         if(bank.openNewAccount(activeUser)) {
             System.out.println("\nCongratulations! The account has been successfully opened.\n");
             openProfile(activeUser, scanner);
@@ -110,36 +108,36 @@ public final class CLI_APP {
         }
     }
 
-    public void proccessChoise3(User activeUser, Scanner scanner) {
-        System.out.println("\nActive accounts: ");
+    public void processChoose3(User activeUser, Scanner scanner) {
+        System.out.println("Active accounts: ");
         activeUser.showAccounts();
-        System.out.println("\n1. Withdrawal");
-        System.out.println("2. Deposit");
+        System.out.print("\n1. Withdrawal  ");
+        System.out.print("2. Deposit  ");
         System.out.println("3. Transactions history");
         System.out.println("4. Open new account");
 
         switch (scanner.nextLine()) {
             case "1":
-                proccessWithdrawal(activeUser, scanner);
+                processWithdrawal(activeUser, scanner);
                 break;
             case "2":
-                proccessDeposit(activeUser, scanner);
+                processDeposit(activeUser, scanner);
                 break;
             case "3":
-                proccessTransactionsHistory(activeUser, scanner);
+                processTransactionsHistory(activeUser, scanner);
                 break;
             case "4":
-                proccessOpenNewAccount(activeUser, scanner);
+                processOpenNewAccount(activeUser, scanner);
                 break;
             default:
                 System.out.println("Please, provide correct number.\n");
-                proccessChoise3(activeUser, scanner);
+                processChoose3(activeUser, scanner);
         }
     }
-    
-    public void proccessWithdrawal(User activeUser, Scanner scanner) {
-        BankAccount fromAccount = activeUser.getUserAccounts().size() > 1 ? 
-        proccessChooseAccount(activeUser, scanner) : activeUser.getUserAccounts().get(0);
+
+    public void processWithdrawal(User activeUser, Scanner scanner) {
+        BankAccount fromAccount = activeUser.getUserAccounts().size() > 1 ?
+        processChooseAccount(activeUser, scanner) : activeUser.getUserAccounts().getFirst();
 
         BankAccount toAccount = bank.getAccountForTransfer(enterAccountNumber(fromAccount, scanner));
         double amount = Double.parseDouble(enterAmount(toAccount, scanner));
@@ -148,7 +146,7 @@ public final class CLI_APP {
             System.out.println("Transfer not executed.\n");
             openProfile(activeUser, scanner);
         }
-        
+
         if(fromAccount.withdrawal(toAccount, amount)) {
             System.out.println("Transfer was successfully executed.\n");
         } else {
@@ -158,14 +156,14 @@ public final class CLI_APP {
         openProfile(activeUser, scanner);
     }
 
-    public void proccessDeposit(User activeUser, Scanner scanner) {
-        BankAccount account = activeUser.getUserAccounts().size() > 1 ? 
-        proccessChooseAccount(activeUser, scanner) : activeUser.getUserAccounts().get(0);
+    public void processDeposit(User activeUser, Scanner scanner) {
+        BankAccount account = activeUser.getUserAccounts().size() > 1 ?
+        processChooseAccount(activeUser, scanner) : activeUser.getUserAccounts().getFirst();
 
         String amount = enterAmount(account, scanner);
 
-        if(amount.equals("")) {
-            proccessChoise3(activeUser, scanner);
+        if(amount.isEmpty()) {
+            processChoose3(activeUser, scanner);
         }
 
         if(account.deposit(Double.parseDouble(amount))) {
@@ -173,34 +171,32 @@ public final class CLI_APP {
         } else {
             System.out.println("Deposit not executed.\n");
         }
-        
+
         openProfile(activeUser, scanner);
     }
 
-    public void proccessTransactionsHistory(User activeUser, Scanner scanner) {
-        BankAccount account = activeUser.getUserAccounts().size() > 1 ? 
-        proccessChooseAccount(activeUser, scanner) : activeUser.getUserAccounts().get(0);
+    public void processTransactionsHistory(User activeUser, Scanner scanner) {
+        BankAccount account = activeUser.getUserAccounts().size() > 1 ?
+        processChooseAccount(activeUser, scanner) : activeUser.getUserAccounts().getFirst();
 
         List<Transaction> history = account.showTransactionsHistory();
-        if(history.size() == 0) {
+        if(history.isEmpty()) {
             System.out.println("At the moment, there haven't been any transactions made.\n");
             openProfile(activeUser, scanner);
         } else {
             for(Transaction transaction : history) {
                 System.out.println(transaction);
-                openProfile(activeUser, scanner);
             }
+            openProfile(activeUser, scanner);
         }
     }
 
-    public BankAccount proccessChooseAccount(User activeUser, Scanner scanner) {
+    public BankAccount processChooseAccount(User activeUser, Scanner scanner) {
         int index = Integer.parseInt(enterNumForChooseAccount(scanner));
 
-        if(index == 0) {
-            proccessChoise3(activeUser, scanner);
-        }
-        if(activeUser.getUserAccounts().size() < index) {
-            proccessChoise3(activeUser, scanner);
+        if(activeUser.getUserAccounts().size() < index || index == 0) {
+            System.out.println("Please, check number.\n");
+            processChoose3(activeUser, scanner);
         }
 
         return activeUser.getUserAccounts().get(index - 1);
@@ -295,8 +291,8 @@ public final class CLI_APP {
 
         if(!checkNum(provided)) {
             System.out.println("Please, enter correct number.");
-            return "";
-        }   
+            return "0";
+        }
         return provided;
     }
 
@@ -338,9 +334,8 @@ public final class CLI_APP {
 
     public static void main(String[] args) {
         DatabaseSetup.setupDatabase();
-        
+
         CLI_APP bank777 = new CLI_APP();
         bank777.openBank();
-
     }
 }
