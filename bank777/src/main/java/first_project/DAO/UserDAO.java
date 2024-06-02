@@ -96,7 +96,7 @@ public class UserDAO {
         return userAccounts;
     }
 
-    public User getUserByUsernameAndPassword(int id, String password) {
+    public User checkUser(int id, String password) {
         String selectUserSQL = "SELECT * FROM User WHERE UserID = ? AND Password = ?";
         User user = null;
     
@@ -120,6 +120,4 @@ public class UserDAO {
     
         return user;
     }
-    
-    // Другие методы для работы с пользователями (deleteUser, updateUser и т.д.)
 }
