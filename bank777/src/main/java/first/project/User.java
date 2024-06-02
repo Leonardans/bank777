@@ -22,6 +22,7 @@ public class User {
     public int getUserID() {
         return userID;
     }
+    
     public String getName() {
         return name;
     }
@@ -37,6 +38,7 @@ public class User {
     public List<BankAccount> getUserAccounts() {
         return userAccounts;
     }
+    
     public synchronized void setUserAccountsFromDatabase(List<BankAccount> fromDatabase) {
         userAccounts = Objects.requireNonNullElseGet(fromDatabase, ArrayList::new);
     }
@@ -47,10 +49,8 @@ public class User {
         }
     }
 
-    public void plusOne(BankAccount account) {
-        if (userAccounts.size() < 3) {
-            userAccounts.add(account);
-        }
+    public boolean plusOne(BankAccount account) {
+        return userAccounts.add(account);
     }
 
     @Override

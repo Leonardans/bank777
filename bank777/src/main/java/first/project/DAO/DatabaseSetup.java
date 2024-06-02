@@ -25,14 +25,21 @@ public class DatabaseSetup {
     public static void setupDatabase() {
         try (Connection connection = DatabaseConnection.getConnection(); Statement statement = connection.createStatement()) {
             String createBankTableSQL = "CREATE TABLE IF NOT EXISTS Bank (" +
-                                        "BankName VARCHAR(100), " +
+                                        "BankName VARCHAR(100) PRIMARY KEY, " +
                                         "TotalMoney DOUBLE, " +
                                         "BankFee DOUBLE, " +
                                         "TotalUsers INT)";
             statement.executeUpdate(createBankTableSQL);
 
+            String createBankFeeTableSQL = "CREATE TABLE IF NOT EXISTS BankFee (" +
+                                        "TransactionID INT PRIMARY KEY, " +
+                                        "Fee DOUBLE, " +
+                                        "TransactionType ENUM('DEPOSIT', 'WITHDRAWAL', 'TRANSFER'), " +
+                                        "Description VARCHAR(255))";
+            statement.executeUpdate(createBankFeeTableSQL);
+
             String createUserTable = "CREATE TABLE IF NOT EXISTS User (" +
-                                      "UserID INT AUTO_INCREMENT PRIMARY KEY, " +
+                                      "UserID INT PRIMARY KEY, " +
                                       "Name VARCHAR(100), " +
                                       "Address VARCHAR(255), " +
                                       "Password VARCHAR(100))";
@@ -47,13 +54,15 @@ public class DatabaseSetup {
             statement.executeUpdate(createAccountTable);
 
             String createTransactionTable = "CREATE TABLE IF NOT EXISTS Transaction (" +
-                                "TransactionID INT AUTO_INCREMENT PRIMARY KEY, " +
-                                "AccountID INT, " +
-                                "TransactionType VARCHAR(50), " +
+                                "TransactionID INT PRIMARY KEY, " +
+                                "ToAccountID INT, " +
+                                "FromAccountID INT, " +
+                                "TransactionType ENUM('DEPOSIT', 'WITHDRAWAL', 'TRANSFER'), " +
                                 "Amount DOUBLE, " +
                                 "Description VARCHAR(255), " +
                                 "Date TIMESTAMP, " +
-                                "FOREIGN KEY (AccountID) REFERENCES Account(AccountID))";
+                                "FOREIGN KEY (ToAccountID) REFERENCES Account(AccountID), " +
+                                "FOREIGN KEY (FromAccountID) REFERENCES Account(AccountID))";
             statement.executeUpdate(createTransactionTable);
 
             
@@ -86,11 +95,13 @@ public class DatabaseSetup {
             if (isTableEmpty(connection, "Account")) {
                 for (int i = 1; i <= 10; i++) {
                     int accID = 1_000_000 + i;
+                    int userID = 100_000 + i;
                     String accountNumber = "E" + (1_000_000_000 + i); 
-                    double balance = 1000.0 * i;
-                    String insertAccount = "INSERT INTO Account (AccountID, AccountNumber, Balance) VALUES (?, ?, ?)";
+                    double balance = 10000.0 * i;
+                    String insertAccount = "INSERT INTO Account (AccountID, UserID, AccountNumber, Balance) VALUES (?, ?, ?, ?)";
                     try (PreparedStatement preparedStatement = connection.prepareStatement(insertAccount)) {
                         preparedStatement.setInt(1, accID);
+                        preparedStatement.setInt(2, userID);
                         preparedStatement.setString(2, accountNumber);
                         preparedStatement.setDouble(3, balance);
                         int rowsAffected = preparedStatement.executeUpdate();
@@ -104,20 +115,22 @@ public class DatabaseSetup {
             if (isTableEmpty(connection, "Transaction")) {
                 for (int i = 1; i <= 10; i++) {
                     int transID = 10_000_000 + i;
-                    int accID = 1_000_000 + i;
-                    String transactionType = "Deposit";
+                    int toAccID = 1_000_000 + i;
+                    int FromAccID = 1_000_001 + i;
+                    String transactionType = "Transfer";
                     double amount = 100.0 * i;
                     String description = "Description for transaction " + i;
-                    String insertTransaction = "INSERT INTO Transaction (TransactionID, AccountID, TransactionType, Amount, Description, Date) VALUES (?, ?, ?, ?, ?, CURDATE())";
+                    String insertTransaction = "INSERT INTO Transaction (TransactionID, ToAccountID, FromAccountID, TransactionType, Amount, Description, Date) VALUES (?, ?, ?, ?, ?, ?, CURDATE())";
                     try (PreparedStatement preparedStatement = connection.prepareStatement(insertTransaction)) {
                         preparedStatement.setInt(1, transID);
-                        preparedStatement.setInt(2, accID);
+                        preparedStatement.setInt(2, toAccID);
+                        preparedStatement.setInt(2, FromAccID);
                         preparedStatement.setString(3, transactionType);
                         preparedStatement.setDouble(4, amount);
                         preparedStatement.setString(5, description);
                         int rowsAffected = preparedStatement.executeUpdate();
                         if (rowsAffected > 0) {
-                            System.out.println("Transaction for account " + accID + " inserted successfully.");
+                            System.out.println("Transaction for account " + toAccID + " inserted successfully.");
                         }
                     }
                 }

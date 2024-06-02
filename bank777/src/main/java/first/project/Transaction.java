@@ -4,16 +4,18 @@ import java.time.LocalDate;
 
 public class Transaction {
     private int transactionID;
-    private int accountID;
+    private int toAccountID;
+    private int fromAccountID;
     private String transactionType;
     private Double amount;
     private String description;
     private LocalDate date;
 
-    public Transaction(int transactionID, int accountID, String transactionType,
-    Double amount, String description, LocalDate date) {
+    public Transaction(int transactionID, int toAccountID, int fromAccountID, String transactionType,
+                        Double amount, String description, LocalDate date) {
         this.transactionID = transactionID;
-        this.accountID = accountID;
+        this.toAccountID = toAccountID;
+        this.fromAccountID = fromAccountID;
         this.transactionType = transactionType;
         this.amount = amount;
         this.description = description;
@@ -26,12 +28,21 @@ public class Transaction {
     public void setTransactionID(int transactionID) {
         this.transactionID = transactionID;
     }
-    public int getAccountID() {
-        return accountID;
+    public int getToAccountID() {
+        return toAccountID;
     }
-    public void setAccountID(int accountID) {
-        this.accountID = accountID;
+
+    public void setToAccountID(int toAccountID) {
+        this.toAccountID = toAccountID;
     }
+    public int getFromAccountID() {
+        return fromAccountID;
+    }
+
+    public void setFromAccountID(int fromAccountID) {
+        this.fromAccountID = fromAccountID;
+    }
+    
     public String getTransactionType() {
         return transactionType;
     }
@@ -59,7 +70,7 @@ public class Transaction {
 
     @Override
     public String toString() {
-        return "Transaction [" + transactionID + ", transactionType = " + transactionType + ", accountID = " + accountID
-        + ", amount = " + amount + "$ " + date + "]";
-    }
+        return description + date;
+
+    }   
 }

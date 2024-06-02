@@ -113,8 +113,9 @@ public final class CLI_APP {
         activeUser.showAccounts();
         System.out.print("\n1. Withdrawal  ");
         System.out.print("2. Deposit  ");
-        System.out.println("3. Transactions history");
-        System.out.println("4. Open new account");
+        System.out.print("3. Transfer  ");
+        System.out.println("4. Transactions history  ");
+        System.out.println("5. Open new account");
 
         switch (scanner.nextLine()) {
             case "1":
@@ -124,9 +125,12 @@ public final class CLI_APP {
                 processDeposit(activeUser, scanner);
                 break;
             case "3":
-                processTransactionsHistory(activeUser, scanner);
+                processTransfer(activeUser, scanner);
                 break;
             case "4":
+                processTransactionsHistory(activeUser, scanner);
+                break;
+            case "5":
                 processOpenNewAccount(activeUser, scanner);
                 break;
             default:
@@ -136,24 +140,22 @@ public final class CLI_APP {
     }
 
     public void processWithdrawal(User activeUser, Scanner scanner) {
-        BankAccount fromAccount = activeUser.getUserAccounts().size() > 1 ?
+        BankAccount account = activeUser.getUserAccounts().size() > 1 ?
         processChooseAccount(activeUser, scanner) : activeUser.getUserAccounts().getFirst();
 
-        BankAccount toAccount = bank.getAccountForTransfer(enterAccountNumber(fromAccount, scanner));
-        double amount = Double.parseDouble(enterAmount(toAccount, scanner));
+        String amount = enterAmount(account, scanner);
 
-        if(toAccount == null || amount == 0D) {
-            System.out.println("Transfer not executed.\n");
-            openProfile(activeUser, scanner);
+        if(amount.isEmpty()) {
+            processChoose3(activeUser, scanner);
         }
 
-        if(fromAccount.withdrawal(toAccount, amount)) {
-            System.out.println("Transfer was successfully executed.\n");
+        if(account.withdrawal(Double.parseDouble(amount))) {
+            System.out.println("Withdrawal was successfully executed.\n");
         } else {
-            System.out.println("Transfer not executed.\n");
+            System.out.println("Withdrawalnot executed.\n");
         }
 
-        openProfile(activeUser, scanner);
+        processChoose3(activeUser, scanner);
     }
 
     public void processDeposit(User activeUser, Scanner scanner) {
@@ -172,7 +174,28 @@ public final class CLI_APP {
             System.out.println("Deposit not executed.\n");
         }
 
-        openProfile(activeUser, scanner);
+        processChoose3(activeUser, scanner);
+    }
+
+    public void processTransfer(User activeUser, Scanner scanner) {
+        BankAccount fromAccount = activeUser.getUserAccounts().size() > 1 ?
+        processChooseAccount(activeUser, scanner) : activeUser.getUserAccounts().getFirst();
+
+        BankAccount toAccount = bank.getAccountForTransfer(enterAccountNumber(fromAccount, scanner));
+        double amount = Double.parseDouble(enterAmount(toAccount, scanner));
+
+        if(toAccount == null || amount == 0D) {
+            System.out.println("Transfer not executed.\n");
+            openProfile(activeUser, scanner);
+        }
+
+        if(fromAccount.transfer(toAccount, amount)) {
+            System.out.println("Transfer was successfully executed.\n");
+        } else {
+            System.out.println("Transfer not executed.\n");
+        }
+
+        processChoose3(activeUser, scanner);
     }
 
     public void processTransactionsHistory(User activeUser, Scanner scanner) {

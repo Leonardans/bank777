@@ -74,9 +74,30 @@ public class BankDAO {
         return false;
     }
 
-    public static boolean updateBankData(double additionalMoney, double additionalFee) {
-        String getBankDataSQL = "SELECT TotalMoney, BankFee FROM Bank WHERE BankName = ?";
-        String updateBankDataSQL = "UPDATE Bank SET TotalMoney = ?, BankFee = ? WHERE BankName = ?";
+    public void updateBankFee(double fee){
+        String selectBankFeeSql = "SELECT BankFee FROM Bank";
+        String updateBankFeeSql = "UPDATE Bank SET BankFee = ?";
+    
+        try (Connection connection = DatabaseConnection.getConnection();
+            PreparedStatement selectStmt = connection.prepareStatement(selectBankFeeSql);
+            ResultSet resultSet = selectStmt.executeQuery()) {
+            if (resultSet.next()) {
+                double currentBankFee = resultSet.getDouble("BankFee");
+                double updatedBankFee = currentBankFee + fee;
+    
+                try (PreparedStatement updateStmt = connection.prepareStatement(updateBankFeeSql)) {
+                    updateStmt.setDouble(1, updatedBankFee);
+                    updateStmt.executeUpdate();
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+    
+    public boolean updateBankData(double amount, double fee, boolean increase) {
+        String getBankDataSQL = "SELECT TotalMoney, BankFee FROM Bank";
+        String updateBankDataSQL = "UPDATE Bank SET TotalMoney = ?, BankFee = ?";
 
         try (Connection connection = DatabaseConnection.getConnection();
             PreparedStatement getStatement = connection.prepareStatement(getBankDataSQL);
@@ -87,8 +108,8 @@ public class BankDAO {
                 double currentMoney = resultSet.getDouble("TotalMoney");
                 double currentFee = resultSet.getDouble("BankFee");
 
-                double updatedMoney = currentMoney + additionalMoney;
-                double updatedFee = currentFee + additionalFee;
+                double updatedMoney = increase ? currentMoney + amount : currentMoney - amount;
+                double updatedFee = currentFee + fee;
 
                 updateStatement.setDouble(1, updatedMoney);
                 updateStatement.setDouble(2, updatedFee);

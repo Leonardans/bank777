@@ -1,7 +1,7 @@
 package first.project;
 
-import java.time.LocalDate;
 import java.util.List;
+import java.util.Random;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -12,18 +12,18 @@ public class BankAccount {
     private final int userID;
     private final String accountNumber;
     private Double balance;
-    private final TransactionDAO transDAO;
-    private final AccountDAO accDAO;
     private final Bank bank;
+    private final TransactionDAO transactionDAO;
+    private final AccountDAO accountDAO;
 
     public BankAccount(int accountID, String accountNumber, Double balance, int userID){
         this.accountID = accountID;
         this.accountNumber = accountNumber;
         this.balance = balance;
         this.userID = userID;
-        transDAO = new TransactionDAO();
-        accDAO = new AccountDAO();
         bank = Bank.getInstance();
+        transactionDAO = new TransactionDAO();
+        accountDAO = new AccountDAO();
     }
 
     public int getAccountID() {
@@ -33,21 +33,63 @@ public class BankAccount {
     public String getAccountNumber() {
         return accountNumber;
     }
+    
     public Double getBalance() {
         return balance;
     }
-    public void addToBalance(Double sum, String mark) {
-        switch (mark) {
+    
+    public void addToBalance(Double sum, String sign) {
+        switch (sign) {
             case "+" -> this.balance += sum;
             case "-" -> this.balance -= sum;
         }
     }
+    
     public int getUserID() {
         return userID;
     }
+    
+    public int generateAccountID() {
+        Random random = new Random();
+        int accID = random.nextInt(8_999_999) + 1_000_000;
 
+        while(true) {
+            boolean check = accountDAO.doesAccountIdExist(accID);
+            if(check) accID = random.nextInt(8_999_999) + 1_000_000;
+            else break;
+        }
+
+        return accID;
+    }
+
+    public String generateAccountNumber() {
+        Random random = new Random();
+        String accNum = "E" + (random.nextLong(8_999_999_999_999L) + 1_000_000_000_000L);
+
+        while(true) {
+            boolean check = accountDAO.doesAccountNumberExist(accNum);
+            if (check) accNum = "E" + (random.nextLong(8_999_999_999_999L) + 1_000_000_000_000L);
+            else break;
+        }
+
+        return accNum;
+    }
+
+    public int generateTransactionID() {
+        Random random = new Random();
+        int transactionID = random.nextInt(89_999_999) + 10_000_000;
+
+        while(true) {
+            boolean check = accountDAO.doesAccountIdExist(transactionID);
+            if(check) transactionID = random.nextInt(8_999_999) + 1_000_000;
+            else break;
+        }
+
+        return transactionID;
+    }
+    
     public List<Transaction> showTransactionsHistory() {
-        return transDAO.getTransactionsByAccountID(this.accountID);
+        return transactionDAO.getTransactionsByAccountID(this.accountID);
     }
 
     public boolean correctAccount(String provided) {
@@ -55,6 +97,7 @@ public class BankAccount {
         Matcher accountMatcher = accountPattern.matcher(provided);
         return accountMatcher.matches();
     }
+    
     public boolean correctSum(String provided) {
         Pattern sumPattern = Pattern.compile("\\d+\\.?\\d*");
         Matcher sumMatcher = sumPattern.matcher(provided);
@@ -63,42 +106,43 @@ public class BankAccount {
 
     public boolean deposit(double amount) {
         int transID = bank.generateTransactionID();
+        double tax = TransactionType.DEPOSIT.getBankTax();
 
-        transDAO.addTransaction(transID, this.accountID, "Deposit", amount, "Deposit", LocalDate.now());
-        accDAO.updateAccountBalance(this.accountID, amount, true);
-
-        if(transDAO.doesTransactionExists(transID)) {
-            bank.setTotalMoney(amount);
-            BankDAO.updateBankData(amount, 0D);
-            addToBalance(amount, "+");
+        if(transactionDAO.makeDeposit(transID, this.getAccountID(), amount - tax)) {
+            bank.addToMoney(amount - tax, "+");
+            bank.plusFee(tax);
+            addToBalance(amount - tax, "+");
             return true;
-        } else
-            return false;
-    }
-
-    public boolean withdrawal(BankAccount toAccount, double amount) {
-        if(this.balance < amount + 1) {
-            return false;
         }
-        int transactionID = bank.generateTransactionID();
-
-        transDAO.addTransaction(transactionID, this.accountID, "Withdrawal", amount, "Withdrawal to " + this.getAccountNumber(), LocalDate.now());
-        transDAO.addTransaction(transactionID, toAccount.getAccountID(), "Deposit", amount, "Deposit from " + toAccount.getAccountNumber(), LocalDate.now());
-
-        accDAO.updateAccountBalance(this.accountID, amount, false);
-        accDAO.updateAccountBalance(toAccount.getAccountID(), amount, true);
-
-
-        if(transDAO.doesTransactionExists(transactionID)) {
-            addToBalance(amount + 1, "-");
-            bank.plusFee(1D);
-            BankDAO.updateBankData(0, 1D);
-            toAccount.addToBalance(amount, "+");
-            return true;
-        } else
-            return false;
+        return false;
     }
 
+    public boolean withdrawal(double amount) {
+        int transID = bank.generateTransactionID();
+        double tax = TransactionType.WITHDRAWAL.getBankTax();
+
+        if(transactionDAO.makeWithdrawal(transID, this.getAccountID(), amount - tax)) {
+            bank.addToMoney(amount - tax, "-");
+            bank.plusFee(tax);
+            addToBalance(amount - tax, "-");
+            return true;
+        }
+        return false;
+    }
+
+    public boolean transfer(BankAccount toAccount, double amount) {
+        int transID = bank.generateTransactionID();
+        double tax = TransactionType.TRANSFER.getBankTax();
+
+        if(transactionDAO.makeTransfer(transID, toAccount.generateAccountID(), this.getAccountID(), amount - tax)) {
+            bank.addToMoney(tax, "-");
+            bank.plusFee(tax);
+            addToBalance(amount - tax, "-");
+            toAccount.addToBalance(amount - tax, "+");
+            return true;
+        }
+        return false;
+    }
     @Override
     public String toString() {
         return accountNumber + ", balance = " + balance + "$";
