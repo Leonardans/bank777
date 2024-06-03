@@ -13,6 +13,7 @@ public class Bank {
     private final String name;
     private Double totalMoney;
     private Double bankFee;
+    private final BankDAO bankDAO;
     private final UserDAO userDAO;
     private final AccountDAO accDAO;
     private final TransactionDAO transactionDAO;
@@ -21,6 +22,7 @@ public class Bank {
         this.name = "bank777";
         totalMoney = 1_000_000D;
         bankFee = 0D;
+        bankDAO = new BankDAO();
         userDAO = new UserDAO();
         accDAO = new AccountDAO();
         transactionDAO = new TransactionDAO();
@@ -117,8 +119,10 @@ public class Bank {
     public int createNewProfile(String name, String address, String password) {
         int id = generateUserID();
 
-        if(userDAO.addUser(id, name, address, password)) return id;
-
+        if(userDAO.addUser(id, name, address, password)) {
+            bankDAO.updateTotalUsers();
+            return id;
+        }
         return 0;
     }
 
@@ -143,7 +147,7 @@ public class Bank {
         String accNum = generateAccountNumber();
 
         if(accDAO.addAccount(accID, user.getUserID(), accNum, 0D)) {
-            BankAccount newAccount = new BankAccount(accID, accNum, 0D, user.getUserID());
+            BankAccount newAccount = new BankAccount(accID, user.getUserID(), accNum, 0D);
             return user.plusOne(newAccount);
         } else
             return false;
