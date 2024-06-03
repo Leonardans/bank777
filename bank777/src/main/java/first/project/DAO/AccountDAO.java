@@ -67,7 +67,7 @@ public class AccountDAO {
                 int accountID = resultSet.getInt("AccountID");
                 double balance = resultSet.getDouble("Balance");
                 int userID = resultSet.getInt("UserID");
-                account = new BankAccount(accountID, accountNumber, balance, userID);
+                account = new BankAccount(accountID, userID, accountNumber, balance);
             }
         } catch (SQLException e) {
             e.printStackTrace();

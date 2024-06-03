@@ -1,7 +1,6 @@
 package first.project;
 
 import java.util.List;
-import java.util.Random;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -14,16 +13,14 @@ public class BankAccount {
     private Double balance;
     private final Bank bank;
     private final TransactionDAO transactionDAO;
-    private final AccountDAO accountDAO;
 
-    public BankAccount(int accountID, String accountNumber, Double balance, int userID){
+    public BankAccount(int accountID, int userID, String accountNumber, Double balance){
         this.accountID = accountID;
+        this.userID = userID;
         this.accountNumber = accountNumber;
         this.balance = balance;
-        this.userID = userID;
         bank = Bank.getInstance();
         transactionDAO = new TransactionDAO();
-        accountDAO = new AccountDAO();
     }
 
     public int getAccountID() {
@@ -33,61 +30,21 @@ public class BankAccount {
     public String getAccountNumber() {
         return accountNumber;
     }
-    
+
     public Double getBalance() {
         return balance;
     }
-    
+    public int getUserID() {
+        return userID;
+    }
+
     public void addToBalance(Double sum, String sign) {
         switch (sign) {
             case "+" -> this.balance += sum;
             case "-" -> this.balance -= sum;
         }
     }
-    
-    public int getUserID() {
-        return userID;
-    }
-    
-    public int generateAccountID() {
-        Random random = new Random();
-        int accID = random.nextInt(8_999_999) + 1_000_000;
 
-        while(true) {
-            boolean check = accountDAO.doesAccountIdExist(accID);
-            if(check) accID = random.nextInt(8_999_999) + 1_000_000;
-            else break;
-        }
-
-        return accID;
-    }
-
-    public String generateAccountNumber() {
-        Random random = new Random();
-        String accNum = "E" + (random.nextLong(8_999_999_999_999L) + 1_000_000_000_000L);
-
-        while(true) {
-            boolean check = accountDAO.doesAccountNumberExist(accNum);
-            if (check) accNum = "E" + (random.nextLong(8_999_999_999_999L) + 1_000_000_000_000L);
-            else break;
-        }
-
-        return accNum;
-    }
-
-    public int generateTransactionID() {
-        Random random = new Random();
-        int transactionID = random.nextInt(89_999_999) + 10_000_000;
-
-        while(true) {
-            boolean check = accountDAO.doesAccountIdExist(transactionID);
-            if(check) transactionID = random.nextInt(8_999_999) + 1_000_000;
-            else break;
-        }
-
-        return transactionID;
-    }
-    
     public List<Transaction> showTransactionsHistory() {
         return transactionDAO.getTransactionsByAccountID(this.accountID);
     }
@@ -97,7 +54,7 @@ public class BankAccount {
         Matcher accountMatcher = accountPattern.matcher(provided);
         return accountMatcher.matches();
     }
-    
+
     public boolean correctSum(String provided) {
         Pattern sumPattern = Pattern.compile("\\d+\\.?\\d*");
         Matcher sumMatcher = sumPattern.matcher(provided);
@@ -108,8 +65,8 @@ public class BankAccount {
         int transID = bank.generateTransactionID();
         double tax = TransactionType.DEPOSIT.getBankTax();
 
-        if(transactionDAO.makeDeposit(transID, this.getAccountID(), amount - tax)) {
-            bank.addToMoney(amount - tax, "+");
+        if(transactionDAO.makeDeposit(transID, this.getAccountID(), amount)) {
+            bank.addToMoney(amount, "+");
             bank.plusFee(tax);
             addToBalance(amount - tax, "+");
             return true;
@@ -121,10 +78,10 @@ public class BankAccount {
         int transID = bank.generateTransactionID();
         double tax = TransactionType.WITHDRAWAL.getBankTax();
 
-        if(transactionDAO.makeWithdrawal(transID, this.getAccountID(), amount - tax)) {
-            bank.addToMoney(amount - tax, "-");
+        if(transactionDAO.makeWithdrawal(transID, this.getAccountID(), amount)) {
+            bank.addToMoney(amount, "-");
             bank.plusFee(tax);
-            addToBalance(amount - tax, "-");
+            addToBalance(amount + tax, "-");
             return true;
         }
         return false;
@@ -134,11 +91,10 @@ public class BankAccount {
         int transID = bank.generateTransactionID();
         double tax = TransactionType.TRANSFER.getBankTax();
 
-        if(transactionDAO.makeTransfer(transID, toAccount.generateAccountID(), this.getAccountID(), amount - tax)) {
-            bank.addToMoney(tax, "-");
+        if(transactionDAO.makeTransfer(transID, toAccount.getAccountID(), this.getAccountID(), amount)){
             bank.plusFee(tax);
-            addToBalance(amount - tax, "-");
-            toAccount.addToBalance(amount - tax, "+");
+            addToBalance(amount + tax, "-");
+            toAccount.addToBalance(amount, "+");
             return true;
         }
         return false;
