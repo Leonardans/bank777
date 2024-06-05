@@ -32,7 +32,7 @@ public class TransactionDAO {
     }
     public List<Transaction> selectFromDeposit(Connection connection, int accountID) throws SQLException {
         List<Transaction> transactions = new ArrayList<>();
-        String selectDeposits = "SELECT * FROM Deposit WHERE AccountID = ?";
+        String selectDeposits = "SELECT * FROM Deposit WHERE AccountID";
 
         try(PreparedStatement preparedStatement = connection.prepareStatement(selectDeposits)) {
             preparedStatement.setInt(1, accountID);
@@ -53,7 +53,7 @@ public class TransactionDAO {
     }
     public List<Transaction> selectFromWithdrawal(Connection connection, int accountID) throws SQLException {
         List<Transaction> transactions = new ArrayList<>();
-        String selectWithdrawals = "SELECT * FROM Withdrawal WHERE AccountID = ?";
+        String selectWithdrawals = "SELECT * FROM Withdrawal WHERE AccountID";
 
         try(PreparedStatement preparedStatement = connection.prepareStatement(selectWithdrawals)) {
             preparedStatement.setInt(1, accountID);
@@ -125,16 +125,17 @@ public class TransactionDAO {
                 feeStmt.setString(4, "Bank fee for transfer transaction " + transactionID);
                 feeStmt.executeUpdate();
 
-                bankDAO.updateBankFee(tax);
-                accountDAO.updateAccountBalance(fromAccount, amount + tax, false);
-                accountDAO.updateAccountBalance(toAccount, amount, true);
-
-                connection.commit();
-                success = true;
             } catch (SQLException e) {
                 connection.rollback();
                 e.printStackTrace();
             }
+
+            bankDAO.updateBankFee(tax);
+            accountDAO.updateAccountBalance(fromAccount, amount + tax, false);
+            accountDAO.updateAccountBalance(toAccount, amount, true);
+
+            connection.commit();
+            success = true;
         } catch (SQLException e) {
             e.printStackTrace();
         }
@@ -142,7 +143,7 @@ public class TransactionDAO {
     }
     public boolean makeDeposit(int accountID, double amount, double tax) {
         String depositSql = "INSERT INTO Deposit (TransactionID, AccountID, TransactionType, Amount, Description) VALUES (?, ?, ?, ?, ?)";
-        String feeSql = "INSERT INTO BankFee (TransactionID, Fee, TransactionType, Description) VALUES (?, ?, ?, ?)";
+        String feeSql = "INSERT INTO BankFee (TransactionID, FeeAmount, TransactionType, Description) VALUES (?, ?, ?, ?)";
 
         try (Connection connection = DatabaseConnection.getConnection()) {
             connection.setAutoCommit(false);
@@ -150,7 +151,7 @@ public class TransactionDAO {
             String transactionID = IDGenerator.generateTransactionID(connection, this);
 
             try (PreparedStatement depositStmt = connection.prepareStatement(depositSql);
-                 PreparedStatement feeStmt = connection.prepareStatement(feeSql)) {
+                PreparedStatement feeStmt = connection.prepareStatement(feeSql)) {
 
                 depositStmt.setString(1, transactionID);
                 depositStmt.setInt(2, accountID);
@@ -165,15 +166,16 @@ public class TransactionDAO {
                 feeStmt.setString(4, "Bank fee for deposit transaction " + transactionID);
                 feeStmt.executeUpdate();
 
-                bankDAO.updateBankData(amount, tax, true);
-                accountDAO.updateAccountBalance(accountID, amount - tax, true);
-
-                connection.commit();
-                return true;
             } catch (SQLException e) {
                 connection.rollback();
                 e.printStackTrace();
             }
+
+            bankDAO.updateBankData(amount, tax, true);
+            accountDAO.updateAccountBalance(accountID, amount - tax, true);
+
+            connection.commit();
+            return true;
         } catch (SQLException e) {
             e.printStackTrace();
         }
@@ -181,7 +183,7 @@ public class TransactionDAO {
     }
     public boolean makeWithdrawal(int accountID, double amount, double tax) {
         String withdrawalSql = "INSERT INTO Withdrawal (TransactionID, AccountID, TransactionType, Amount, Description) VALUES (?, ?, ?, ?, ?)";
-        String feeSql = "INSERT INTO BankFee (TransactionID, Fee, TransactionType, Description) VALUES (?, ?, ?, ?)";
+        String feeSql = "INSERT INTO BankFee (TransactionID, FeeAmount, TransactionType, Description) VALUES (?, ?, ?, ?)";
 
         try (Connection connection = DatabaseConnection.getConnection()) {
             connection.setAutoCommit(false);
@@ -203,17 +205,16 @@ public class TransactionDAO {
                 feeStmt.setString(3, TransactionType.WITHDRAWAL.name());
                 feeStmt.setString(4, "Bank fee for withdrawal transaction " + transactionID);
                 feeStmt.executeUpdate();
-
-
-                bankDAO.updateBankData(amount, tax, false);
-                accountDAO.updateAccountBalance(accountID, amount + tax, false);
-
-                connection.commit();
-                return true;
             } catch (SQLException e) {
                 connection.rollback();
                 e.printStackTrace();
             }
+
+            bankDAO.updateBankData(amount, tax, false);
+            accountDAO.updateAccountBalance(accountID, amount + tax, false);
+
+            connection.commit();
+            return true;
         } catch (SQLException e) {
             e.printStackTrace();
         }

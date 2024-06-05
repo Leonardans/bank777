@@ -13,21 +13,22 @@ public class DatabaseSetup {
         try (Connection connection = DatabaseConnection.getConnection();
              Statement statement = connection.createStatement()) {
             createBankTable(statement);
+            createBankFeeTable(statement);
             createUserTable(statement);
             createAccountTable(statement);
             createDepositTable(statement);
             createWithdrawalTable(statement);
             createTransferTable(statement);
-            createBankFeeTable(statement);
+
+            if(isTableEmpty(connection, "Bank")) insertStartBankData(connection);
+            if(isTableEmpty(connection, "User")) insertStartUsersData(connection);
+            if(isTableEmpty(connection, "Account")) insertStartAccountsData(connection);
+            if(isTableEmpty(connection, "Transfer")) insertStartTransfersData(connection);
 
             if(!isTableEmpty(connection, "Bank")) {
                 BANK.addToMoney(BankDAO.getTotalMoney(), "+");
                 BANK.plusFee(BankDAO.getBankFee());
             }
-            if(isTableEmpty(connection, "Bank")) insertStartBankData(connection);
-            if(isTableEmpty(connection, "User")) insertStartUsersData(connection);
-            if(isTableEmpty(connection, "Account")) insertStartAccountsData(connection);
-            if(isTableEmpty(connection, "Transfer")) insertStartTransfersData(connection);
 
         } catch (SQLException e) {
             e.printStackTrace();
@@ -51,7 +52,7 @@ public class DatabaseSetup {
         String createBankTableSQL = "CREATE TABLE IF NOT EXISTS Bank (" +
                                     "BankName VARCHAR(100) PRIMARY KEY, " +
                                     "TotalMoney DOUBLE, " +
-                                    "TotalFee DOUBLE, " +
+                                    "BankFee DOUBLE, " +
                                     "TotalUsers INT, " +
                                     "TotalAccounts INT)";
         statement.executeUpdate(createBankTableSQL);
@@ -115,21 +116,19 @@ public class DatabaseSetup {
                                         "Fee DOUBLE, " +
                                         "TransactionType ENUM('DEPOSIT', 'WITHDRAWAL', 'TRANSFER'), " +
                                         "Description VARCHAR(255), " +
-                                        "FOREIGN KEY (TransactionID) REFERENCES Deposit (TransactionID), " +
-                                        "FOREIGN KEY (TransactionID) REFERENCES Withdrawal (TransactionID), " +
-                                        "FOREIGN KEY (TransactionID) REFERENCES Transfer (TransactionID))";
+                                        "FOREIGN KEY (TransactionID) REFERENCES Transaction(TransactionID))";
         statement.executeUpdate(createBankFeeTableSQL);
     }
 
     public static void insertStartBankData(Connection connection) throws SQLException {
-        String insertBankData = "INSERT INTO Bank (BankName, TotalMoney, TotalFee, TotalUsers, TotalAccounts) VALUES (?, ?, ?, ?, ?)";
+        String insertBankData = "INSERT INTO Bank (BankName, TotalMoney, BankFee, TotalUsers, TotalAccounts) VALUES (?, ?, ?, ?, ?)";
 
         try (PreparedStatement preparedStatement = connection.prepareStatement(insertBankData)) {
             preparedStatement.setString(1, BANK.getBankName());
             preparedStatement.setDouble(2, BANK.getTotalMoney());
             preparedStatement.setDouble(3, BANK.getBankFee());
+            preparedStatement.setInt(3, 0);
             preparedStatement.setInt(4, 0);
-            preparedStatement.setInt(5, 0);
             int rowsAffected = preparedStatement.executeUpdate();
             if (rowsAffected > 0) {
                 System.out.println("Bank data inserted successfully.");
@@ -167,8 +166,8 @@ public class DatabaseSetup {
             try (PreparedStatement preparedStatement = connection.prepareStatement(insertAccount)) {
                 preparedStatement.setInt(1, accountID);
                 preparedStatement.setInt(2, userID);
-                preparedStatement.setString(3, accountNumber);
-                preparedStatement.setDouble(4, balance);
+                preparedStatement.setString(2, accountNumber);
+                preparedStatement.setDouble(3, balance);
                 int rowsAffected = preparedStatement.executeUpdate();
                 if (rowsAffected > 0) {
                     System.out.println("Account " + accountNumber + " inserted successfully.");
@@ -191,9 +190,9 @@ public class DatabaseSetup {
                 preparedStatement.setString(1, transactionID);
                 preparedStatement.setInt(2, toAccountID);
                 preparedStatement.setInt(3, fromAccountID);
-                preparedStatement.setString(4, transactionType);
-                preparedStatement.setDouble(5, amount);
-                preparedStatement.setString(6, description);
+                preparedStatement.setString(3, transactionType);
+                preparedStatement.setDouble(4, amount);
+                preparedStatement.setString(5, description);
                 int rowsAffected = preparedStatement.executeUpdate();
                 if (rowsAffected > 0) {
                     System.out.println("Transfer for account " + toAccountID + " inserted successfully.");

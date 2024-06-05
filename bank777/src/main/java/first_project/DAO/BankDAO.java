@@ -21,12 +21,12 @@ public class BankDAO {
         return 0D;
     }
     public static Double getBankFee() {
-        String selectBankFeeSQL = "SELECT TotalFee FROM Bank";
+        String selectBankFeeSQL = "SELECT BankFee FROM Bank";
         try (Connection connection = DatabaseConnection.getConnection();
              PreparedStatement preparedStatement = connection.prepareStatement(selectBankFeeSQL)) {
             ResultSet resultSet = preparedStatement.executeQuery();
             if (resultSet.next()) {
-                return resultSet.getDouble("TotalFee");
+                return resultSet.getDouble("BankFee");
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -36,7 +36,7 @@ public class BankDAO {
 
     public void updateTotalUsers(Connection connection) {
         String getTotalUsersSQL = "SELECT TotalUsers FROM Bank";
-        String updateTotalUsersSQL = "UPDATE Bank SET TotalUsers = ?";
+        String updateTotalUsersSQL = "UPDATE Bank SET TotalUsers";
 
         try (PreparedStatement getStatement = connection.prepareStatement(getTotalUsersSQL);
              PreparedStatement updateStatement = connection.prepareStatement(updateTotalUsersSQL)) {
@@ -45,7 +45,6 @@ public class BankDAO {
             if(resultSet.next()) {
                 int users = resultSet.getInt("TotalUsers");
                 updateStatement.setInt(1, users + 1);
-                updateStatement.executeUpdate();
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -53,7 +52,7 @@ public class BankDAO {
     }
     public void updateTotalAccounts(Connection connection) {
         String getTotalAccountsSQL = "SELECT TotalAccounts FROM Bank";
-        String updateTotalAccountsSQL = "UPDATE Bank SET TotalAccounts = ?";
+        String updateTotalAccountsSQL = "UPDATE Bank SET TotalAccounts";
 
         try (PreparedStatement getStatement = connection.prepareStatement(getTotalAccountsSQL);
              PreparedStatement updateStatement = connection.prepareStatement(updateTotalAccountsSQL)) {
@@ -62,21 +61,20 @@ public class BankDAO {
             if(resultSet.next()) {
                 int accounts = resultSet.getInt("TotalAccounts");
                 updateStatement.setInt(1, accounts + 1);
-                updateStatement.executeUpdate();
             }
         } catch (SQLException e) {
             e.printStackTrace();
         }
     }
     public void updateBankFee(double fee){
-        String selectBankFeeSql = "SELECT TotalFee FROM Bank";
-        String updateBankFeeSql = "UPDATE Bank SET TotalFee = ?";
+        String selectBankFeeSql = "SELECT BankFee FROM Bank";
+        String updateBankFeeSql = "UPDATE Bank SET BankFee = ?";
 
         try (Connection connection = DatabaseConnection.getConnection();
             PreparedStatement selectStmt = connection.prepareStatement(selectBankFeeSql);
             ResultSet resultSet = selectStmt.executeQuery()) {
             if (resultSet.next()) {
-                double currentBankFee = resultSet.getDouble("TotalFee");
+                double currentBankFee = resultSet.getDouble("BankFee");
                 double updatedBankFee = currentBankFee + fee;
 
                 try (PreparedStatement updateStmt = connection.prepareStatement(updateBankFeeSql)) {
@@ -89,8 +87,8 @@ public class BankDAO {
         }
     }
     public void updateBankData(double amount, double fee, boolean increase) {
-        String getBankDataSQL = "SELECT TotalMoney, TotalFee FROM Bank";
-        String updateBankDataSQL = "UPDATE Bank SET TotalMoney = ?, TotalFee = ?";
+        String getBankDataSQL = "SELECT TotalMoney, BankFee FROM Bank";
+        String updateBankDataSQL = "UPDATE Bank SET TotalMoney = ?, BankFee = ?";
 
         try (Connection connection = DatabaseConnection.getConnection();
             PreparedStatement getStatement = connection.prepareStatement(getBankDataSQL);
@@ -99,13 +97,13 @@ public class BankDAO {
             ResultSet resultSet = getStatement.executeQuery();
             if (resultSet.next()) {
                 double currentMoney = resultSet.getDouble("TotalMoney");
-                double currentFee = resultSet.getDouble("TotalFee");
+                double currentFee = resultSet.getDouble("BankFee");
 
                 double updatedMoney = increase ? currentMoney + amount : currentMoney - amount;
                 double updatedFee = currentFee + fee;
 
-                updateStatement.setDouble(1, updatedMoney);
-                updateStatement.setDouble(2, updatedFee);
+                updateStatement.setDouble(2, updatedMoney);
+                updateStatement.setDouble(3, updatedFee);
                 updateStatement.executeUpdate();
             }
         } catch (SQLException e) {

@@ -1,4 +1,4 @@
-package first.project;
+package first_project;
 
 import java.util.List;
 import java.util.ArrayList;
@@ -22,33 +22,26 @@ public class User {
     public int getUserID() {
         return userID;
     }
-    
     public String getName() {
         return name;
     }
-
     public String getPassword() {
         return password;
     }
-
     public void changePassword(String password) {
         this.password = password;
     }
-
     public List<BankAccount> getUserAccounts() {
         return userAccounts;
     }
-    
     public synchronized void setUserAccountsFromDatabase(List<BankAccount> fromDatabase) {
         userAccounts = Objects.requireNonNullElseGet(fromDatabase, ArrayList::new);
     }
-
     public void showAccounts() {
         for(BankAccount account : userAccounts) {
             System.out.println(account);
         }
     }
-
     public boolean plusOne(BankAccount account) {
         return userAccounts.add(account);
     }
