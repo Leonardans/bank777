@@ -1,4 +1,4 @@
-package first.project.DAO;
+package first_project.DAO;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -7,32 +7,37 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
-import first.project.BankAccount;
-import first.project.User;
+import first_project.BankAccount;
+import first_project.User;
+import first_project.utils.IDGenerator;
 
 public class UserDAO {
 
-    public boolean addUser(int id, String name, String address, String password) {
-        String insertUserSQL = "INSERT INTO User (UserID, Name, Address, Password) VALUES (?, ?, ?, ?)";
+    private final BankDAO bankDAO = new BankDAO();
 
+    public int addUser(String name, String address, String password) {
+        int userID = 0;
+
+        String insertUserSQL = "INSERT INTO User (UserID, Name, Address, Password) VALUES (?, ?, ?, ?)";
         try (Connection connection = DatabaseConnection.getConnection()) {
-            System.out.println("Autocommit status: " + connection.getAutoCommit());
             PreparedStatement preparedStatement = connection.prepareStatement(insertUserSQL);
 
-            preparedStatement.setInt(1, id);
+            userID = IDGenerator.generateUserID(connection, this);
+            preparedStatement.setInt(1, userID);
             preparedStatement.setString(2, name);
             preparedStatement.setString(3, address);
             preparedStatement.setString(4, password);
 
             int rowsAffected = preparedStatement.executeUpdate();
-            return rowsAffected > 0;
+            if(rowsAffected > 0) {
+                bankDAO.updateTotalUsers(connection);
+            }
         } catch (SQLException e) {
             e.printStackTrace();
-            return false;
         }
+        return userID;
     }
-
-    public User getUserById(int userId) {
+    public static User getUserById(int userId) {
         String selectUserSQL = "SELECT * FROM User WHERE UserID = ?";
         User user = null;
 
@@ -53,16 +58,13 @@ public class UserDAO {
         }
         return user;
     }
-
-    public boolean checkUserIdExistence(int userId) {
+    public boolean checkUserIdExistence(Connection connection, int userId) {
         String selectUserSQL = "SELECT COUNT(*) FROM User WHERE UserID = ?";
         boolean exists = false;
 
-        try (Connection connection = DatabaseConnection.getConnection();
-            PreparedStatement preparedStatement = connection.prepareStatement(selectUserSQL)) {
+        try (PreparedStatement preparedStatement = connection.prepareStatement(selectUserSQL)) {
             preparedStatement.setInt(1, userId);
             ResultSet resultSet = preparedStatement.executeQuery();
-
             if (resultSet.next()) {
                 int count = resultSet.getInt(1);
                 exists = count > 0;
@@ -73,7 +75,6 @@ public class UserDAO {
 
         return exists;
     }
-
     public List<BankAccount> getUserAccounts(int userID) {
         String selectAccountsSQL = "SELECT * FROM Account WHERE UserID = ?";
         List<BankAccount> userAccounts = new ArrayList<>();
@@ -96,7 +97,6 @@ public class UserDAO {
 
         return userAccounts;
     }
-
     public User checkUser(int id, String password) {
         String selectUserSQL = "SELECT * FROM User WHERE UserID = ? AND Password = ?";
         User user = null;

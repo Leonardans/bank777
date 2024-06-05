@@ -1,5 +1,8 @@
-1. Withdrawal -> Transfer
-2. Withdrawal
-3. Enum(Fee for each operation)
+1. [DONE] Withdrawal -> Transfer
+2. [DONE] Withdrawal
+3. [DONE] Enum(Fee for each operation)
 4. User can change password or take it from database
 5. Admins features
+6. Generate all IDs in dao level in one connection
+7. add user in bank total users too in one connection in adduser method
+8. only account number check need realize with overloading (with and without pass connection)

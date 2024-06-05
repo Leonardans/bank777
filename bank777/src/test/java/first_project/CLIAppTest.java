@@ -1,4 +1,4 @@
-package first.project;
+package first_project;
 
 import org.junit.jupiter.api.Test;
 

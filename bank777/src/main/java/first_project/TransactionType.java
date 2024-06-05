@@ -1,4 +1,4 @@
-package first.project;
+package first_project;
 
 public enum TransactionType {
     DEPOSIT(0.1),

@@ -1,12 +1,11 @@
-package first.project;
+package first_project;
 
 import java.util.List;
 import java.util.Objects;
 import java.util.Scanner;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
-import first.project.DAO.DatabaseSetup;
+import first_project.DAO.DatabaseSetup;
+import first_project.utils.ValidationUtils;
 
 public final class CLI_APP {
     Bank bank = Bank.getInstance();
@@ -153,7 +152,7 @@ public final class CLI_APP {
         BankAccount account = activeUser.getUserAccounts().size() > 1 ?
             processChooseAccount(activeUser, scanner) : activeUser.getUserAccounts().getFirst();
 
-        double amount = enterAmount(account, scanner);
+        double amount = enterAmount(scanner);
         if(amount == 0D) processChoose3(activeUser, scanner);
 
         boolean confirm = processInformingAboutTax(TransactionType.DEPOSIT, amount, scanner);
@@ -171,7 +170,7 @@ public final class CLI_APP {
         BankAccount account = activeUser.getUserAccounts().size() > 1 ?
         processChooseAccount(activeUser, scanner) : activeUser.getUserAccounts().getFirst();
 
-        double amount = enterAmount(account, scanner);
+        double amount = enterAmount(scanner);
         if(amount == 0D) processChoose3(activeUser, scanner);
 
         boolean confirm = processInformingAboutTax(TransactionType.WITHDRAWAL, amount, scanner);
@@ -188,7 +187,7 @@ public final class CLI_APP {
         BankAccount fromAccount = activeUser.getUserAccounts().size() > 1 ?
             processChooseAccount(activeUser, scanner) : activeUser.getUserAccounts().getFirst();
 
-        String toAccountNumber = enterAccountNumber(fromAccount, scanner);
+        String toAccountNumber = enterAccountNumber(scanner);
         BankAccount toAccount;
         if(!toAccountNumber.isEmpty())
             toAccount = bank.getAccountForTransfer(toAccountNumber);
@@ -197,7 +196,7 @@ public final class CLI_APP {
             return;
         }
 
-        double amount = enterAmount(toAccount, scanner);
+        double amount = enterAmount(scanner);
         if(toAccount == null && amount == 0D) {
             System.out.println("Transfer not executed.\n");
             openProfile(activeUser, scanner);
@@ -213,7 +212,6 @@ public final class CLI_APP {
         }
         processChoose3(activeUser, scanner);
     }
-
     public void processTransactionsHistory(User activeUser, Scanner scanner) {
         BankAccount account = activeUser.getUserAccounts().size() > 1 ?
             processChooseAccount(activeUser, scanner) : activeUser.getUserAccounts().getFirst();
@@ -247,7 +245,6 @@ public final class CLI_APP {
                 return false;
         }
     }
-
     public boolean processConfirm(Scanner scanner) {
         System.out.println("Press Y if you agree or any other key if you disagree.");
         return scanner.nextLine().equalsIgnoreCase("Y");
@@ -258,7 +255,7 @@ public final class CLI_APP {
         for(int i = 0; i < 3; i++) {
             System.out.println("\nPlease, enter your name: ");
             String providedName = scanner.nextLine();
-            if(!checkName(providedName)) {
+            if(!ValidationUtils.checkName(providedName)) {
                 System.out.println("Incorrect name!\n");
             } else {
                 name = providedName;
@@ -272,7 +269,7 @@ public final class CLI_APP {
         for(int i = 0; i < 3; i++) {
             System.out.println("Please, enter your password: ");
             String providedPassword  = scanner.nextLine();
-            if(!checkPassword(providedPassword )) {
+            if(!ValidationUtils.checkPassword(providedPassword )) {
                 System.out.println("The password must contain at least 8 characters, including at least " +
                 "one digit, one lowercase letter, one uppercase letter, and one special character from the set @#$%^&+=.\n");
             } else {
@@ -287,7 +284,7 @@ public final class CLI_APP {
         for(int i = 0; i < 3; i++) {
             System.out.println("Please, enter your address:\nExample: Black Street 2-54");
             String providedAddress = scanner.nextLine();
-            if(!checkAddress(providedAddress)) {
+            if(!ValidationUtils.checkAddress(providedAddress)) {
                 System.out.println("Incorrect address!\n");
             } else {
                 address = providedAddress;
@@ -301,7 +298,7 @@ public final class CLI_APP {
         for(int i = 0; i < 3; i++) {
             System.out.println("\nPlease, enter your userID: ");
             String providedUserID = scanner.nextLine();
-            if(!checkUserID(providedUserID)) {
+            if(!ValidationUtils.checkUserID(providedUserID)) {
                 System.out.println("UserID most contain 6 numbers!\n");
             } else {
                 userID = providedUserID;
@@ -310,12 +307,12 @@ public final class CLI_APP {
         }
         return userID;
     }
-    public double enterAmount(BankAccount account, Scanner scanner) {
+    public double enterAmount(Scanner scanner) {
         String amount= "";
         for(int i = 0; i < 3; i++) {
             System.out.println("\nPlease enter amount.");
             String providedAmount = scanner.nextLine();
-            if(!account.correctSum(providedAmount)) {
+            if(!ValidationUtils.correctSum(providedAmount)) {
                 System.out.println("Please, provide correct amount for transfer.\n");
             } else {
                 amount = providedAmount;
@@ -324,12 +321,12 @@ public final class CLI_APP {
         }
         return Double.parseDouble(amount);
     }
-    public String enterAccountNumber(BankAccount account, Scanner scanner) {
+    public String enterAccountNumber(Scanner scanner) {
         String accountNumber= "";
         for(int i = 0; i < 3; i++) {
             System.out.println("\nPlease enter the account number to which you wish to transfer money.");
             String providedAccountNumber = scanner.nextLine();
-            boolean check = account.correctAccount(providedAccountNumber) && bank.accountPresent(providedAccountNumber);
+            boolean check = ValidationUtils.correctAccount(providedAccountNumber) && bank.accountPresent(providedAccountNumber);
 
             if(check) {
                 accountNumber = providedAccountNumber;
@@ -342,47 +339,11 @@ public final class CLI_APP {
         System.out.println("\nEnter the account number you want to use.");
         String provided = scanner.nextLine();
 
-        if(!checkNum(provided)) {
+        if(!ValidationUtils.checkNum(provided)) {
             System.out.println("Please, enter correct number.");
             return "0";
         }
         return provided;
-    }
-
-    public boolean checkName(String provided) {
-        String nameRegex = "^[a-zA-Z]+(([',. -][a-zA-Z ])?[a-zA-Z]*)*$";
-        Pattern namePattern = Pattern.compile(nameRegex);
-        Matcher nameMatcher = namePattern.matcher(provided);
-
-        return nameMatcher.matches();
-    }
-    public boolean checkAddress(String provided) {
-        String addressRegex = "^([a-zA-Z]+\\s){0,2}[a-zA-Z]+\\s\\d+-\\d+$";
-        Pattern addressPattern = Pattern.compile(addressRegex);
-        Matcher addressMatcher = addressPattern.matcher(provided);
-
-        return addressMatcher.matches();
-    }
-    public boolean checkPassword(String provided) {
-        String passwordRegex = "^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[@#$%^&+=])(?=\\S+$).{8,}$";
-        Pattern passwordPattern = Pattern.compile(passwordRegex);
-        Matcher passwordMatcher = passwordPattern.matcher(provided);
-
-        return passwordMatcher.matches();
-    }
-    public boolean checkUserID(String provided) {
-        String idRegex = "^\\d{6}$";
-        Pattern idPattern = Pattern.compile(idRegex);
-        Matcher idMatcher = idPattern.matcher(provided);
-
-        return idMatcher.matches();
-    }
-    public boolean checkNum(String provided) {
-        String numRegex = "^[123]$";
-        Pattern numPattern = Pattern.compile(numRegex);
-        Matcher numMatcher = numPattern.matcher(provided);
-
-        return numMatcher.matches();
     }
 
     public static void main(String[] args) {

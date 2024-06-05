@@ -1,4 +1,4 @@
-package first.project.DAO;
+package first_project.DAO;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -6,24 +6,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 
 public class BankDAO {
-
-    public void updateTotalUsers() {
-        String getTotalUsersSQL = "SELECT TotalUsers FROM Bank";
-        String updateTotalUsersSQL = "UPDATE Bank SET TotalUsers";
-
-        try (Connection connection = DatabaseConnection.getConnection();
-             PreparedStatement getStatement = connection.prepareStatement(getTotalUsersSQL);
-             PreparedStatement updateStatement = connection.prepareStatement(updateTotalUsersSQL)) {
-
-            ResultSet resultSet = getStatement.executeQuery();
-            if(resultSet.next()) {
-                int users = resultSet.getInt("TotalUsers");
-                updateStatement.setInt(1, users + 1);
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-    }
 
     public static Double getTotalMoney() {
         String selectTotalMoneySQL = "SELECT TotalMoney FROM Bank";
@@ -38,7 +20,6 @@ public class BankDAO {
         }
         return 0D;
     }
-
     public static Double getBankFee() {
         String selectBankFeeSQL = "SELECT BankFee FROM Bank";
         try (Connection connection = DatabaseConnection.getConnection();
@@ -53,45 +34,38 @@ public class BankDAO {
         return 0D;
     }
 
-    public static boolean insertBankData(String bankName, double totalMoney, double bankFee, int totalUsers) {
-        if (!isBankExist(bankName)) {
-            String insertBankDataSQL = "INSERT INTO Bank (BankName, TotalMoney, BankFee, TotalUsers) VALUES (?, ?, ?, ?)";
+    public void updateTotalUsers(Connection connection) {
+        String getTotalUsersSQL = "SELECT TotalUsers FROM Bank";
+        String updateTotalUsersSQL = "UPDATE Bank SET TotalUsers";
 
-            try (Connection connection = DatabaseConnection.getConnection();
-                PreparedStatement preparedStatement = connection.prepareStatement(insertBankDataSQL)) {
-                preparedStatement.setString(1, bankName);
-                preparedStatement.setDouble(2, totalMoney);
-                preparedStatement.setDouble(3, bankFee);
-                preparedStatement.setInt(4, totalUsers);
-                int rowsAffected = preparedStatement.executeUpdate();
-                if (rowsAffected > 0) {
-                    return true;
-                }
-            } catch (SQLException e) {
-                return false;
-            }
-        } else {
-            return false;
-        }
-        return false;
-    }
+        try (PreparedStatement getStatement = connection.prepareStatement(getTotalUsersSQL);
+             PreparedStatement updateStatement = connection.prepareStatement(updateTotalUsersSQL)) {
 
-    private static boolean isBankExist(String bankName) {
-        String selectBankSQL = "SELECT COUNT(*) FROM Bank WHERE BankName = ?";
-
-        try (Connection connection = DatabaseConnection.getConnection();
-            PreparedStatement preparedStatement = connection.prepareStatement(selectBankSQL)) {
-            preparedStatement.setString(1, bankName);
-            ResultSet resultSet = preparedStatement.executeQuery();
-            if (resultSet.next()) {
-                return resultSet.getInt(1) > 0;
+            ResultSet resultSet = getStatement.executeQuery();
+            if(resultSet.next()) {
+                int users = resultSet.getInt("TotalUsers");
+                updateStatement.setInt(1, users + 1);
             }
         } catch (SQLException e) {
             e.printStackTrace();
         }
-        return false;
     }
+    public void updateTotalAccounts(Connection connection) {
+        String getTotalAccountsSQL = "SELECT TotalAccounts FROM Bank";
+        String updateTotalAccountsSQL = "UPDATE Bank SET TotalAccounts";
 
+        try (PreparedStatement getStatement = connection.prepareStatement(getTotalAccountsSQL);
+             PreparedStatement updateStatement = connection.prepareStatement(updateTotalAccountsSQL)) {
+
+            ResultSet resultSet = getStatement.executeQuery();
+            if(resultSet.next()) {
+                int accounts = resultSet.getInt("TotalAccounts");
+                updateStatement.setInt(1, accounts + 1);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
     public void updateBankFee(double fee){
         String selectBankFeeSql = "SELECT BankFee FROM Bank";
         String updateBankFeeSql = "UPDATE Bank SET BankFee = ?";
@@ -112,7 +86,6 @@ public class BankDAO {
             e.printStackTrace();
         }
     }
-
     public void updateBankData(double amount, double fee, boolean increase) {
         String getBankDataSQL = "SELECT TotalMoney, BankFee FROM Bank";
         String updateBankDataSQL = "UPDATE Bank SET TotalMoney = ?, BankFee = ?";
