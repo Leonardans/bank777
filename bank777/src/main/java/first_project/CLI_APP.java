@@ -157,7 +157,8 @@ public final class CLI_APP {
 
         boolean confirm = processInformingAboutTax(TransactionType.DEPOSIT, amount, scanner);
         if(confirm) {
-            if(account.deposit(amount)) {
+            boolean attempt = account.deposit(amount);
+            if(attempt) {
                 System.out.println(amount - TransactionType.DEPOSIT.getBankTax() + "$ was successfully deposited into your account.");
             } else {
                 System.out.println("Deposit not executed.\n");
@@ -175,7 +176,8 @@ public final class CLI_APP {
 
         boolean confirm = processInformingAboutTax(TransactionType.WITHDRAWAL, amount, scanner);
         if(confirm) {
-            if(account.withdrawal(amount)) {
+            boolean attempt = account.withdrawal(amount);
+            if(attempt) {
                 System.out.println(amount + TransactionType.WITHDRAWAL.getBankTax() + "$ have been withdrawn from your account.");
             } else {
                 System.out.println("Withdrawal not executed.\n");
@@ -204,7 +206,8 @@ public final class CLI_APP {
 
         boolean confirm = processInformingAboutTax(TransactionType.TRANSFER, amount, scanner);
         if(confirm) {
-            if(fromAccount.transfer(Objects.requireNonNull(toAccount), amount)) {
+            boolean attempt = fromAccount.transfer(Objects.requireNonNull(toAccount), amount);
+            if(attempt) {
                 System.out.println(amount + "$ was successfully transferred to account " + toAccount.getAccountNumber());
             } else {
                 System.out.println("Transfer not executed.\n");
@@ -235,7 +238,7 @@ public final class CLI_APP {
                 return processConfirm(scanner);
             case "WITHDRAWAL":
                 double tax2 = TransactionType.WITHDRAWAL.getBankTax();
-                System.out.println("Tax for withdrawal is " + tax2 + "$ from your account will be deducted" + (amount + tax2) + "$");
+                System.out.println("Tax for withdrawal is " + tax2 + "$ from your account will be deducted " + (amount + tax2) + "$");
                 return processConfirm(scanner);
             case "TRANSFER":
                 double tax3 =TransactionType.TRANSFER.getBankTax();

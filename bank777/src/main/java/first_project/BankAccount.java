@@ -54,6 +54,7 @@ public class BankAccount {
     public boolean withdrawal(double amount) {
         double tax = TransactionType.WITHDRAWAL.getBankTax();
 
+        if(amount > this.getBalance()) return false;
         if(transactionDAO.makeWithdrawal(this.getAccountID(), amount, tax)) {
             bank.addToMoney(amount, "-");
             bank.plusFee(tax);
@@ -65,6 +66,7 @@ public class BankAccount {
     public boolean transfer(BankAccount toAccount, double amount) {
         double tax = TransactionType.TRANSFER.getBankTax();
 
+        if(amount > this.getBalance()) return false;
         if(transactionDAO.makeTransfer(toAccount.getAccountID(), this.getAccountID(), amount, tax)){
             bank.plusFee(tax);
             addToBalance(amount + tax, "-");
