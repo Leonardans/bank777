@@ -3,15 +3,13 @@ package first_project.DAO;
 import java.math.BigDecimal;
 import java.sql.*;
 import java.time.LocalDate;
-
-import first_project.Bank;
 import first_project.TransactionType;
 
 public class DatabaseSetup {
-    private final static  Bank BANK = Bank.getInstance();
+
     private final static  BankDAO BANKDAO = new BankDAO();
 
-    public static void setupDatabase() {
+    public static void setupDatabase(String name, BigDecimal money, BigDecimal tax) {
         try (Connection connection = DatabaseConnection.getConnection();
              Statement statement = connection.createStatement()) {
             createBankTable(statement);
@@ -22,11 +20,7 @@ public class DatabaseSetup {
             createWithdrawalTable(statement);
             createTransferTable(statement);
 
-            if(!isTableEmpty(connection, "Bank")) {
-                BANK.addToMoney(BankDAO.getTotalMoney(), "+");
-                BANK.plusFee(BankDAO.getBankFee());
-            }
-            if(isTableEmpty(connection, "Bank")) insertStartBankData(connection);
+            if(isTableEmpty(connection, "Bank")) insertStartBankData(connection, name, money, tax);
             if(isTableEmpty(connection, "User")) insertStartUsersData(connection);
             if(isTableEmpty(connection, "Account")) insertStartAccountsData(connection);
             if(isTableEmpty(connection, "BankFee")) insertStartBankFeeData(connection);
@@ -49,6 +43,7 @@ public class DatabaseSetup {
         }
         return false;
     }
+
     public static void createBankTable(Statement statement) throws SQLException  {
         String createBankTableSQL = "CREATE TABLE IF NOT EXISTS Bank (" +
                                     "BankID INT PRIMARY KEY, " +
@@ -131,14 +126,14 @@ public class DatabaseSetup {
         statement.executeUpdate(createTransactionTable);
     }
 
-    public static void insertStartBankData(Connection connection) throws SQLException {
+    public static void insertStartBankData(Connection connection, String name, BigDecimal money, BigDecimal tax) throws SQLException {
         String insertBankData = "INSERT INTO Bank (BankID, BankName, TotalMoney, TotalFee, TotalUsers, TotalAccounts) VALUES (?, ?, ?, ?, ?, ?)";
 
         try (PreparedStatement preparedStatement = connection.prepareStatement(insertBankData)) {
             preparedStatement.setInt(1, 777);
-            preparedStatement.setString(2, BANK.getBankName());
-            preparedStatement.setBigDecimal(3, BANK.getTotalMoney());
-            preparedStatement.setBigDecimal(4, BANK.getBankFee());
+            preparedStatement.setString(2, name);
+            preparedStatement.setBigDecimal(3, money);
+            preparedStatement.setBigDecimal(4, tax);
             preparedStatement.setInt(5, 0);
             preparedStatement.setInt(6, 0);
             int rowsAffected = preparedStatement.executeUpdate();

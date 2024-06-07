@@ -2,7 +2,6 @@ package first_project;
 
 import first_project.DAO.UserDAO;
 
-import java.sql.Connection;
 import java.util.List;
 import java.util.ArrayList;
 
@@ -43,9 +42,7 @@ public class User {
     }
 
     public void showAccounts() {
-        for(BankAccount account : userAccounts) {
-            System.out.println(account);
-        }
+        userAccounts.forEach(System.out::println);
     }
 
     @Override

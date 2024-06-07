@@ -4,8 +4,6 @@ import java.math.BigDecimal;
 import java.util.List;
 import java.util.Objects;
 import java.util.Scanner;
-
-import first_project.DAO.DatabaseSetup;
 import first_project.utils.ValidationUtils;
 
 public final class CLI_APP {
@@ -159,6 +157,7 @@ public final class CLI_APP {
         }
         return activeUser.getUserAccounts().get(index - 1);
     }
+
     public void processDeposit(User activeUser, Scanner scanner) {
         BankAccount account = activeUser.getUserAccounts().size() > 1 ?
             processChooseAccount(activeUser, scanner) : activeUser.getUserAccounts().getFirst();
@@ -173,7 +172,7 @@ public final class CLI_APP {
             if(account.deposit(amount)) {
                 activeUser.setUserAccountsFromDB(activeUser.getUserID());
                 System.out.println("\n\n" + amount.subtract(TransactionType.DEPOSIT.getBankTax()) +
-                    "$ was successfully deposited into your account.");
+                    "$ was successfully deposited into your account." + " [ Tax is " + TransactionType.TRANSFER.getBankTax() + "$ ]");
             } else {
                 System.out.println("\nDeposit not executed.");
             }
@@ -193,7 +192,7 @@ public final class CLI_APP {
             if(account.withdrawal(amount)) {
                 activeUser.setUserAccountsFromDB(activeUser.getUserID());
                 System.out.println("\n\n" + amount.add(TransactionType.WITHDRAWAL.getBankTax()) +
-                    "$ have been withdrawn from your account.");
+                    "$ have been withdrawn from your account." + " [ Tax is " + TransactionType.WITHDRAWAL.getBankTax() + "$ ]");
             } else {
                 System.out.println("\nWithdrawal not executed.");
             }
@@ -223,7 +222,8 @@ public final class CLI_APP {
         if(confirm) {
             if(fromAccount.transfer(Objects.requireNonNull(toAccount), amount)) {
                 activeUser.setUserAccountsFromDB(activeUser.getUserID());
-                System.out.println("\n\n" + amount + "$ was successfully transferred to account " + toAccount.getAccountNumber());
+                System.out.println("\n\n" + amount + "$ was successfully transferred to account " + toAccount.getAccountNumber() +
+                    " [ Tax is " + TransactionType.TRANSFER.getBankTax() + "$ ]");
             } else {
                 System.out.println("\nTransfer not executed.");
             }
@@ -246,6 +246,7 @@ public final class CLI_APP {
             openProfile(activeUser, scanner);
         }
     }
+
     public boolean processInformingAboutTax(Enum<TransactionType> operation, BigDecimal amount, Scanner scanner) {
         switch(operation.name()) {
             case "DEPOSIT":
@@ -268,6 +269,7 @@ public final class CLI_APP {
         System.out.println("Press Y if you agree or any other key if you disagree.");
         return scanner.nextLine().equalsIgnoreCase("Y");
     }
+
     public void processCloseApp() {
         System.exit(0);
     }
@@ -369,8 +371,6 @@ public final class CLI_APP {
     }
 
     public static void main(String[] args) {
-        DatabaseSetup.setupDatabase();
-
         CLI_APP bank777 = new CLI_APP();
         bank777.openBank();
     }

@@ -1,8 +1,22 @@
 1. [DONE] Withdrawal -> Transfer
 2. [DONE] Withdrawal
 3. [DONE] Enum(Fee for each operation)
-4. User can change password or take it from database
+4. [DONE] Generate all IDs in dao level in one connection
+5. [DONE] add user in bank total users too in one connection in adduser method
+6. [DONE] only account number check need realize with overloading (with and without pass connection)
+7. [DONE] show accNum instead of accID in transaction toString()
+8. [DONE] repair many!
+
+1. User can change password(+one screen after open bank - user choose he want
+   change password or operate with accounts) + *****
+2. User can restore their passwords(in open bank) by providing userID, name and address,
+   if user can't system will prompt users to come in bank and show his document
+3. Users can take all their taxes like transaction history
+4. Users can enter a date and get all expenses from that date to the current day.
+   (upgrade transaction history and taxes)
+5. Calculate from one collection with transactions sum of amounts and taxes with
+   stream
+6. Upgrade transactions history -> try some sorting with streams or without
+7. Попробовать почти во всех методах дао прокидывать ошибку дальше - сократить код
 5. Admins features
-6. Generate all IDs in dao level in one connection
-7. add user in bank total users too in one connection in adduser method
-8. only account number check need realize with overloading (with and without pass connection)
+

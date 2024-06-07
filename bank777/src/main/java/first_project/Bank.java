@@ -1,6 +1,7 @@
 package first_project;
 
 import first_project.DAO.AccountDAO;
+import first_project.DAO.DatabaseSetup;
 import first_project.DAO.UserDAO;
 
 import java.math.BigDecimal;
@@ -17,46 +18,53 @@ public class Bank {
 
     }
 
-    public static User systemFindUser(int id) {
-        return UserDAO.getUserById(id);
+    {
+        DatabaseSetup.setupDatabase(name, totalMoney, bankFee);
     }
-    public static Bank getInstance() {
+
+    protected static Bank getInstance() {
         return instance;
     }
-    public String getBankName() {
+
+    protected static User systemFindUser(int id) {
+        return UserDAO.getUserById(id);
+    }
+
+    protected String getBankName() {
         return name;
     }
-    public void addToMoney(BigDecimal amount, String sign) {
+    protected BigDecimal getTotalMoney() {
+        return totalMoney;
+    }
+    protected BigDecimal getBankFee() {
+        return bankFee;
+    }
+    protected void addToMoney(BigDecimal amount, String sign) {
         switch (sign) {
             case "+" -> this.totalMoney = totalMoney.add(amount);
             case "-" -> this.totalMoney = totalMoney.subtract(amount);
         }
     }
-    public void plusFee(BigDecimal amount) {
+    protected void plusFee(BigDecimal amount) {
         bankFee = bankFee.add(amount);
     }
-    public BigDecimal getTotalMoney() {
-        return totalMoney;
-    }
-    public BigDecimal getBankFee() {
-        return bankFee;
-    }
 
-    public boolean accountPresent(String accountNumber) {
-       return accountDAO.doesAccountNumberExist(accountNumber);
-    }
-    public BankAccount getAccountForTransfer(String accountNumber) {
-        return accountDAO.getAccountByAccountNumber(accountNumber);
-    }
-    public int createNewProfile(String name, String address, String password) {
-        return userDAO.addUser(name, address, password);
-    }
-    public User login(int userID, String password) {
+    protected User login(int userID, String password) {
         User someUser = userDAO.checkUser(userID, password);
         if(someUser != null) someUser.setUserAccountsFromDB(userID);
         return someUser;
     }
-    public boolean openNewAccount(User user) {
+    protected int createNewProfile(String name, String address, String password) {
+        return userDAO.addUser(name, address, password);
+    }
+
+    protected boolean accountPresent(String accountNumber) {
+       return accountDAO.doesAccountNumberExist(accountNumber);
+    }
+    protected BankAccount getAccountForTransfer(String accountNumber) {
+        return accountDAO.getAccountByAccountNumber(accountNumber);
+    }
+    protected boolean openNewAccount(User user) {
         boolean userHasMax = userDAO.hasMaxAccounts(user.getUserID(), 3);
         if(userHasMax) return false;
 

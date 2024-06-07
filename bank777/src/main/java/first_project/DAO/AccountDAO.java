@@ -13,6 +13,7 @@ import first_project.utils.IDGenerator;
 public class AccountDAO {
 
     private final BankDAO bankDAO = new BankDAO();
+
     public boolean addAccount(User user) {
         int accountID;
         String accountNumber;
@@ -66,6 +67,7 @@ public class AccountDAO {
             e.printStackTrace();
         }
     }
+
     public BankAccount getAccountByAccountNumber(String accountNumber) {
         String selectAccountSQL = "SELECT * FROM Account WHERE AccountNumber = ?";
         BankAccount account = null;
@@ -85,6 +87,7 @@ public class AccountDAO {
 
         return account;
     }
+
     public boolean doesAccountNumberExist(String accountNumber) {
         String selectAccountSQL = "SELECT COUNT(*) FROM Account WHERE AccountNumber = ?";
         boolean exists = false;

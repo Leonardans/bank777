@@ -70,7 +70,7 @@ public class BankDAO {
             e.printStackTrace();
         }
     }
-    protected void updateTotalFee(Connection connection, BigDecimal fee){
+    protected void updateTotalFee(Connection connection, BigDecimal fee) {
         String selectBankFeeSql = "SELECT TotalFee FROM Bank";
         String updateBankFeeSql = "UPDATE Bank SET TotalFee = ?";
 
@@ -112,6 +112,7 @@ public class BankDAO {
             e.printStackTrace();
         }
     }
+
     protected void insertBankFee(Connection connection, String transactionID, String feeID, BigDecimal tax, TransactionType type,
                                  LocalDate date) throws SQLException {
         String feeSql = "INSERT INTO BankFee (FeeID, Fee, TransactionType, Description, Date) VALUES (?, ?, ?, ?, ?)";

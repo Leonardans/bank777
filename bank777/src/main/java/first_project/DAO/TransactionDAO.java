@@ -14,6 +14,7 @@ import first_project.TransactionType;
 import first_project.utils.IDGenerator;
 
 public class TransactionDAO {
+
     BankDAO bankDAO = new BankDAO();
     AccountDAO accountDAO = new AccountDAO();
 
@@ -145,6 +146,7 @@ public class TransactionDAO {
             transferStmt.executeUpdate();
         }
     }
+
     public boolean makeDeposit(int accountID, String accNum, BigDecimal amount, BigDecimal tax) {
         boolean success = false;
 
@@ -187,6 +189,7 @@ public class TransactionDAO {
             depositStmt.executeUpdate();
         }
     }
+
     public boolean makeWithdrawal(int accountID, String accNum, BigDecimal amount, BigDecimal tax) {
         boolean success = false;
 
@@ -229,6 +232,7 @@ public class TransactionDAO {
             withdrawalStmt.executeUpdate();
         }
     }
+
     public boolean doesTransactionExists(Connection connection, String feeID) {
         String selectTransactionSQL = "SELECT COUNT(*) FROM BankFee WHERE FeeID = ?";
         boolean exists = false;
